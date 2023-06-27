@@ -1,0 +1,36 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Selectiave Search Quality",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--image",
+                "orange.jpg",
+                "--method",
+                "quality"
+            ],
+            "justMyCode": true
+        },
+        {
+            "name": "Selectiave Search Fast",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--image",
+                "orange.jpg",
+                "--method",
+                "fast"
+            ],
+            "justMyCode": true
+        }
+    ]
+}
