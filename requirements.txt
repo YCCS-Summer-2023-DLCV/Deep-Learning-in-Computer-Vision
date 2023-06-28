@@ -1,0 +1,4 @@
+tensorflow==2.13.0rc1
+tensorflow-datasets==4.9.2
+tqdm==4.65.0
+matplotlib==3.7.1
