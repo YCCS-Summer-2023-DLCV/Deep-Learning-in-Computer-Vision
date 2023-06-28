@@ -1,2 +1,2 @@
 # Deep-Learning-in-Computer-Vision
-Object Segmentation and detection Project
+Instance Segmentation and Object Detection Project
