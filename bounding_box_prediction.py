@@ -19,5 +19,8 @@ def predict_image(image_path, model_path):
         cropped_image = _crop_image(img,i[0])
         i[1] = new_model.predict(cropped_image)
 
+    return array_numpy
+
 def _crop_image(example, bbox):
     return example.crop(bbox)
+
