@@ -84,16 +84,16 @@ x = tf.keras.layers.Dropout(0.2)(x)
 outputs = prediction_layer(x)
 model = tf.keras.Model(inputs, outputs)
 
-base_learning_rate = 0.0008
-model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
+base_learning_rate = 0.0005
+model.compile(optimizer="adam",
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
 def scheduler(epoch, lr):
-  if epoch > 3:
-    return lr/10
-  else:
+  if epoch < 10:
     return lr
+  else:
+    return lr * tf.math.exp(-0.1)
 callback = tf.keras.callbacks.LearningRateScheduler(scheduler)
 
 #Train the base model on our training data
@@ -102,9 +102,6 @@ history = model.fit(train_ds,
                     epochs=initial_epochs,
                     validation_data=val_ds,
                     callbacks = [callback])
-
-#Evaluate test data before fine tuning
-model.evaluate(test_ds)
 
 plt.plot(history.history['accuracy'], label='accuracy')
 plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
@@ -129,10 +126,10 @@ model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=Tru
               metrics=['accuracy'])
 
 def scheduler_fine_tuning(epoch, lr):
-  if epoch > 10:
-    return lr/10
-  else:
+  if epoch < 10:
     return lr
+  else:
+    return lr * tf.math.exp(-0.1)
 callback_fine = tf.keras.callbacks.LearningRateScheduler(scheduler)
 
 fine_tune_epochs = 15
