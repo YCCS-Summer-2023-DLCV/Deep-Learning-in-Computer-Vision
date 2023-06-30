@@ -9,7 +9,7 @@ from tensorflow import keras
 
 # Load the dataset
 BATCH_SIZE = 32
-IMG_SIZE = (64, 64)
+IMG_SIZE = (100, 100)
 train_dir = "train"
 
 train_ds = keras.utils.image_dataset_from_directory(
@@ -21,7 +21,7 @@ train_ds = keras.utils.image_dataset_from_directory(
     batch_size=BATCH_SIZE
 )
 
-model = keras.models.load_model("saved_model/resnet_50")
+model = keras.models.load_model("saved_model/resnet_50_2")
 
 # Retrieve the true labels from the dataset
 true_labels = []
