@@ -35,8 +35,7 @@ def generate_selective_search_examples(dataset, label_subset, all_labels, datase
     split_dir = _create_directories(os.path.join(ROOT_DIR, dataset_title), split, label_subset)
 
     # For each example, crop out patches using selective search boxes that encompass the coco box
-    for example in dataset:
-        print("Example ID:", example["image/id"])
+    for example in tqdm(dataset):
         _process_example(example, label_registry, split_dir)
 
 def _create_directories(ds_dir, split_name, label_subset):
@@ -71,17 +70,16 @@ def _process_example(example, label_registry, split_dir):
     boxes = []
     for item_id, bbox in items:
         for ss_box in _pick_good_boxes(ss_boxes, bbox):
-            boxes.append((label_registry[item_id], ss_box))
+            boxes.append([label_registry[item_id], ss_box])
 
-    for _, box in boxes:
-        box = _convert_coco_bounds_to_PIL_bounds(box, example["image"].shape)
+    for index, (_, box) in enumerate(boxes):
+        boxes[index][1] = _convert_coco_bounds_to_PIL_bounds(box.copy() , example["image"].shape)
 
     # For each box, crop the image and save the image
     # The path should be: split_dir/class/<image id>-<crop number>.jpeg
     for index, (label, box) in enumerate(boxes):
         # Generate the path to save the image
         path_to_save = os.path.join(split_dir, label, f"{example['image/id'].numpy()}-{index}.jpeg")
-        print(index, label, box)
         _crop_and_save_image(example, box, path_to_save)
 
 def _crop_and_save_image(example, box, path_for_image):
@@ -95,12 +93,8 @@ def _crop_and_save_image(example, box, path_for_image):
 
     img = Image.open(temp_file_name)
 
-    #box = _convert_coco_bounds_to_PIL_bounds(box, example["image"].shape)
-
-    try:
-        img = img.crop(box)
-    except:
-        print("Skipped image", path_for_image)
+    img = img.crop(box)
+    
     img.save(path_for_image)
 
     temp_file.close()
@@ -196,11 +190,11 @@ def _convert_coco_bounds_to_PIL_bounds(bounds, image_shape):
     # Coco stores the bounds as ratios of the width and height of the image
     # The crop method expects number of pixels
     height, width, _ = image_shape
-    bounds[0] = bounds[0] * width
-    bounds[2] *= bounds[2] * width
+    bounds[0] *= width
+    bounds[2] *= width
 
-    bounds[1] *= bounds[1]* height
-    bounds[3] *= bounds[3] * height
+    bounds[1] *= height
+    bounds[3] *= height
 
     return bounds
 
