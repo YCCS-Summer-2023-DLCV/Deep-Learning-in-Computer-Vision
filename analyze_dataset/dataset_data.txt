@@ -9,3 +9,4 @@ Images without our labels: train - 102,032, validation - 4292
 In the Selective Search Dataset:
 Examples in Train: 264652
 Examples in Validation: 11941
+Total: 276,593
