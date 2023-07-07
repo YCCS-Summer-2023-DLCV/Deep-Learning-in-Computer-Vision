@@ -16,11 +16,13 @@ def predict_image(image_path, model_path):
     image_bbox = selective_search.selective_search_fast(image_path)
     array_numpy =np.append(image_bbox, np.empty(image_bbox.shape),axis = 1) 
     for i in array_numpy:
-        cropped_image = _crop_image(img,i[0])
+        cropped_image = _crop_image(img,i)
         i[1] = new_model.predict(cropped_image)
 
     return array_numpy
 
 def _crop_image(example, bbox):
-    return example.crop(bbox)
+    bbox_rect = (bbox[1],bbox[0],bbox[1]+bbox[3],bbox[0]+bbox[2])
+    return example.crop(bbox_rect)
 
+predict_image("images.jpg", "model/saved_model/Efficient2mk2/")
