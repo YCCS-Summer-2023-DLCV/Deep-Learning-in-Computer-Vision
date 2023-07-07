@@ -32,9 +32,7 @@ def predict_image(image_path, model_path,max_bboxes):
 
 def _crop_image(example, bbox):
     bbox_rect = (bbox[0],bbox[1],bbox[0]+bbox[2],bbox[1]+bbox[3])
-    example = example.crop(bbox_rect)
-    example.save("geeks.jpg")
-    return example
+    return example.crop(bbox_rect)
 
 def _non_max_suppersion(boxes, scores, max_bboxes):
     selected_indices = tf.image.non_max_suppression(boxes,scores,max_bboxes,iou_threshold=0.5)
