@@ -9,11 +9,11 @@ from tensorflow import keras
 
 # Load the dataset
 BATCH_SIZE = 32
-IMG_SIZE = (100, 100)
-train_dir = "train"
+IMG_SIZE = (120, 120)
+test_dir = "validation"
 
 train_ds = keras.utils.image_dataset_from_directory(
-    train_dir,
+    test_dir,
     validation_split=0.2,
     subset="training",
     seed=123,
@@ -21,7 +21,7 @@ train_ds = keras.utils.image_dataset_from_directory(
     batch_size=BATCH_SIZE
 )
 
-model = keras.models.load_model("saved_model/resnet_50_2")
+model = keras.models.load_model("saved_model/efficientnet_b1_2")
 
 # Retrieve the true labels from the dataset
 true_labels = []
@@ -57,4 +57,4 @@ for i in range(len(class_names)):
 ax.set_title("Confusion Matrix")
 plt.xlabel("Predicted Labels")
 plt.ylabel("True Labels")
-plt.savefig("Confusion_resnet50.jpeg")
+plt.savefig("Confusion_efficientnetb1.jpeg")
