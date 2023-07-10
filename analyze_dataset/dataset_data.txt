@@ -1,0 +1,12 @@
+labels = ["banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake"]
+
+Bounding boxes with our labels: 66347
+
+Images in Coco: train - 118287, validation - 5000
+Images with our labels: train - 16255, validation - 708
+Images without our labels: train - 102,032, validation - 4292
+
+In the Selective Search Dataset:
+Examples in Train: 264652
+Examples in Validation: 11941
+Total: 276,593
