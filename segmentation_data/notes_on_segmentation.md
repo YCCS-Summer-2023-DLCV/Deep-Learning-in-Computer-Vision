@@ -35,4 +35,4 @@ for example in dataset.take(1):
 
 The masks are sub-matricies of the original matrix. They correspond to the portion of the image which is in the bounding box.
 
-The dimensions of the bounding boxes as stored by FiftyOne are in the following format: `[x, y, width, height]`
+The dimensions of the bounding boxes as stored by FiftyOne are in the following format: `[x, y, width, height]`.

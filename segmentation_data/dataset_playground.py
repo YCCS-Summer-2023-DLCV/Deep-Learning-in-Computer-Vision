@@ -8,7 +8,7 @@ dataset = foz.load_zoo_dataset(
     split = "validation",
     max_samples = 1,
     classes = labels,
-    label_types = ["segmentations"]
+    label_types = ["segmentations"],
 )
 
 for example in dataset.take(1):
