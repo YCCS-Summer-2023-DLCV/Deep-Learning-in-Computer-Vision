@@ -36,3 +36,11 @@ for example in dataset.take(1):
 The masks are sub-matricies of the original matrix. They correspond to the portion of the image which is in the bounding box.
 
 The dimensions of the bounding boxes as stored by FiftyOne are in the following format: `[x, y, width, height]`.
+
+## Plan for Creating Dataset
+1. Use selective search to get boxes around each object. Make sure each box encompasses the coco bounding box.
+2. Crop the image using the box.
+3. Expand the mask to fill the whole box.
+4. Save the image and the mask.
+
+The path for each example will be `root_dir/split/class/<image id>-mask.png`

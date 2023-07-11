@@ -7,7 +7,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
-from process_data_api import _get_label_ids, ROOT_DIR
+from preprocess_data.process_data_api import _get_label_ids, ROOT_DIR
 
 def _set_path():
     # Add the root of the venv to the path
@@ -159,7 +159,7 @@ def _convert_ss_boxes_to_coco(ss_boxes, image_shape):
     # Coco stores the bounds as [y0, x0, y1, x1] and as a ratio of the image size
 
     # Get the image size
-    image_height, image_width, _ = image_shape
+    image_height, image_width= image_shape[0], image_shape[1]
 
     # Convert the array as one that holds floats
     ss_boxes = np.asfarray(ss_boxes)
@@ -181,7 +181,10 @@ def _convert_ss_boxes_to_coco(ss_boxes, image_shape):
 
     return ss_boxes
 
-def _convert_coco_bounds_to_PIL_bounds(bounds, image_shape):
+def _convert_coco_bounds_to_PIL_bounds(input_bounds, image_shape):
+    # Copy the bounds so that the original isn't modified
+    bounds = input_bounds.copy()
+
     # Coco stores the bounds as [y0, x0, y1, x1]
     # PIL expects the bounds to be [x0, y0, x1, y1]
     bounds[0], bounds[1] = bounds[1], bounds[0]
@@ -189,12 +192,15 @@ def _convert_coco_bounds_to_PIL_bounds(bounds, image_shape):
 
     # Coco stores the bounds as ratios of the width and height of the image
     # The crop method expects number of pixels
-    height, width, _ = image_shape
+    height, width = image_shape[0], image_shape[1]
     bounds[0] *= width
     bounds[2] *= width
 
     bounds[1] *= height
     bounds[3] *= height
+
+    for i, _ in enumerate(bounds):
+        bounds[i] = int(bounds[i])
 
     return bounds
 
