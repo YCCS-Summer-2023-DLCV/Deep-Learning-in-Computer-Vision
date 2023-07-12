@@ -1,4 +1,5 @@
 import fiftyone.zoo as foz
+import fiftyone as fo
 import matplotlib.pyplot as plt
 
 from process_example import process_example
@@ -8,23 +9,26 @@ labels = ["banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot do
 dataset = foz.load_zoo_dataset(
     "coco-2017",
     split = "validation",
-    max_samples = 1,
+    max_samples = 100,
     classes = labels,
     label_types = ["segmentations"],
     shuffle = True,
-    seed = 52
+    seed = 72
 )
 
-for example in dataset.take(1):
+
+for example in dataset.take(100):
     detections = example["ground_truth"]["detections"]
-    print(example["metadata"])
     print(example["filepath"])
 
-    # plt.figure(figsize=(7, 7))
-    # for index, detection in enumerate(detections):
-    #     mask = detection["mask"]
-    #     plt.subplot(1, len(detections), index + 1)
-    #     plt.imshow(mask)
+    plt.figure(figsize=(7, 7))
+    for index, detection in enumerate(detections):
+        if not detection["label"] in labels:
+            continue
+
+        mask = detection["mask"]
+        plt.subplot(len(detections), 1, index + 1)
+        plt.imshow(mask)
 
 
     plt.savefig("segmentation_data/masks.png")
@@ -32,15 +36,11 @@ for example in dataset.take(1):
     processed_examples = process_example(example, labels)
     plt.figure(figsize=(7, 7))
     for index, processed_example in enumerate(processed_examples):
-        plt.title(processed_example["label"])
         ax = plt.subplot(len(processed_examples), 2, (index * 2) + 1)
         plt.imshow(processed_example["image"])
         plt.axis("off")
 
-        ax.remove()
-
-        plt.title(processed_example["label"])
-        plt.subplot(len(processed_examples), 2, (index * 2) + 2)
+        ax = plt.subplot(len(processed_examples), 2, (index * 2) + 2)
         plt.imshow(processed_example["mask"])
         plt.axis("off")
 

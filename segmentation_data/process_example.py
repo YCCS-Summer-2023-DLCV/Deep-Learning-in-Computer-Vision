@@ -13,13 +13,15 @@ def _set_path():
 
 _set_path()
 
-from preprocess_data.generate_selective_search_examples import _convert_ss_boxes_to_coco, _convert_coco_bounds_to_PIL_bounds
 from selective_search import selective_search_fast
 import PIL
 import numpy as np
 
+from segmentation_data.example import Example
+from segmentation_data.conversions import convert_box_type
 
-def process_example(example, classes):
+
+def process_example(input_example, classes):
     '''
     Process a single example.
 
@@ -47,38 +49,37 @@ def process_example(example, classes):
         The mask is expanded to fill the box. Any pixels that are not
         from the original mask are set to 0.
     '''
+    example = Example(input_example)
 
     # Load the image as a numpy array
-    image = _load_image(example)
+    image = example.get_image()
 
     # Get the selective search boxes
-    ss_boxes = _get_boxes(example)
+    ss_boxes = selective_search_fast(example.get_path_to_image())
 
-    # Coco stores the bounds as [y0, x0, y1, x1] and as a ratio of the image size.
+    # Coco stores the bounds as [x, y, w, h] and as a ratio of the image size.
     # The selective search boxes are [x, y, w, h]. It is stored in pixel values.
     # Convert the selective search boxes to the same format as Coco.
-    ss_boxes = _convert_ss_boxes_to_coco(ss_boxes, image.size)
+    for ss_box in ss_boxes:
+        ss_box = convert_box_type(ss_box, "selective_search", "coco", example.get_image_size())
 
     # For each object, pick the box that best fits the object,
     # crop the image, and expand the mask to fit the box.
     # Only process objects in the classes list.
     objects = []
-    for detection in example["ground_truth"]["detections"]:
-        label = detection["label"]
+    for label, bbox, mask in zip(example.get_labels(), example.get_bounding_boxes(), example.get_masks()):
+        # Only process objects in the classes list
         if label not in classes:
             continue
-
-        mask = detection["mask"]
-        bbox = detection["bounding_box"]
         
         # Get the box that best fits the object
         box = _pick_ss_box(ss_boxes, bbox)
 
         # Crop the image
-        cropped_image = _crop_image(image, box)
+        cropped_image = example.get_cropped_image(box)
 
         # Expand the mask
-        expanded_mask = _expand_mask(mask, bbox, box, image.size)
+        expanded_mask = _expand_mask(mask, bbox, box, example.get_image_size())
 
         # Add the object to the list
         objects.append({
@@ -144,7 +145,7 @@ def _pick_ss_box(ss_boxes, bbox):
         - The box encompasses the entire object
         - The box is not too large
 
-        The input boxes should be in the Coco format ([y0, x0, y1, x1], ratio of image size).
+        The input boxes should be in the Coco format ([x, y, w, h], ratio of image size).
         The output box is the same.
     '''
 
@@ -158,15 +159,12 @@ def _pick_ss_box(ss_boxes, bbox):
         if _box_encompasses_other_box(box, bbox):
             # Check if the box is too large
             if _box_is_not_too_large(box, bbox):
-                print("Picked box and index is:", index)
                 return box
-            
-        index += 1
             
     # If no box is found, return the original box
     return bbox
 
-def _box_encompasses_other_box(a, b):
+def _box_encompasses_other_box(input_a, input_b):
     '''
     Check if box a encompasses box b.
 
@@ -178,8 +176,12 @@ def _box_encompasses_other_box(a, b):
         True if box a encompasses box b. False otherwise.
 
     Notes:
-        The boxes are in the format [y0, x0, y1, x1].
+        The boxes are in the format [x, y, w, h].
     '''
+
+    # Convert the boxes to the format [x0, y0, x1, y1]
+    a = [input_a[0], input_a[1], input_a[0] + input_a[2], input_a[1] + input_a[3]]
+    b = [input_b[0], input_b[1], input_b[0] + input_b[2], input_b[1] + input_b[3]]
 
     # Check if the x0 and y0 of b are inside a
     if a[0] <= b[0] and a[1] <= b[1]:
@@ -201,44 +203,23 @@ def _box_is_not_too_large(a, b):
         True if box a is not too large compared to box b. False otherwise.
 
     Notes:
-        The boxes are in the format [y0, x0, y1, x1].
+        The boxes are in the format [x, y, w, h].
         "Not too large" means that the area of box a is less than twice the area of box b.
     '''
     # Get the area of box a
-    area_a = (a[2] - a[0]) * (a[3] - a[1])
+    area_a = a[2] * a[3]
 
     # Get the area of box b
-    area_b = (b[2] - b[0]) * (b[3] - b[1])
+    area_b = b[2] * b[3]
 
     # Get the ratio of the areas
     ratio = area_a / area_b
 
     # If the ratio is less than 2, return True
-    if ratio < 2:
+    if ratio < 4:
         return True
     
     return False
-
-def _crop_image(image, box):
-    '''
-    Crop the image using the box.
-
-    Args:
-        image: A PIL image.
-        box: A list of four numbers representing a box. The box is in the Coco format ([y0, x0, y1, x1], ratio of image size).
-    
-    Returns:
-        A numpy array of shape (height, width, 3) and dtype uint8.
-    '''
-    pil_box = _convert_coco_bounds_to_PIL_bounds(box, image.size)
-
-    # Crop the image
-    cropped_image = image.crop(pil_box)
-
-    # Convert the image to a numpy array
-    cropped_image = np.array(cropped_image)
-
-    return cropped_image
 
 def _expand_mask(mask, mask_border, dest_box, image_shape):
     '''
@@ -246,8 +227,9 @@ def _expand_mask(mask, mask_border, dest_box, image_shape):
 
     Args:
         mask: A numpy array of shape (height, width) and dtype uint8.
-        mask_location: A list of four numbers representing the bounding box of the mask. The box is in the Coco format ([y0, x0, y1, x1], ratio of image size).
-        box: A list of four numbers representing a box. The box is in the Coco format ([y0, x0, y1, x1], ratio of image size).
+        mask_location: A list of four numbers representing the bounding box of the mask. The box is in the Coco format ([x, y, w, h], ratio of image size).
+        box: A list of four numbers representing a box. The box is in the Coco format ([x, y, w, h], ratio of image size).
+        image_shape: A list of two numbers representing the shape of the image in the format (height, width).
 
     Returns:
         A numpy array of shape (height, width) and dtype uint8.
@@ -257,25 +239,69 @@ def _expand_mask(mask, mask_border, dest_box, image_shape):
     '''
 
     # Convert the mask location to a PIL box
-    mask_border = _convert_coco_bounds_to_PIL_bounds(mask_border, image_shape)
+    mask_border = convert_box_type(mask_border, "coco", "pil", image_shape)
 
     # Convert the box to a PIL box
-    dest_box = _convert_coco_bounds_to_PIL_bounds(dest_box, image_shape)
-
-    # Convert dest_box to integers
-    dest_box = [int(x) for x in dest_box]
+    dest_box = convert_box_type(dest_box, "coco", "pil", image_shape)
 
     # Create an empty mask of the size of the box
     expanded_mask = np.zeros((dest_box[3] - dest_box[1], dest_box[2] - dest_box[0]), dtype=np.uint8)
 
-    # Identify where the mask is in the box
-    # The format is (x0, y0, x1, y1)
-    mask_location_in_box = mask_border[0] - dest_box[0], mask_border[1] - dest_box[1], mask_border[2] - dest_box[0], mask_border[3] - dest_box[1]
+    # Make sure the expanded mask is at least the size of the mask
+    if expanded_mask.shape[0] < mask.shape[0]:
+        expanded_mask = np.zeros((mask.shape[0], expanded_mask.shape[1]), dtype=np.uint8)
+    if expanded_mask.shape[1] < mask.shape[1]:
+        expanded_mask = np.zeros((expanded_mask.shape[0], mask.shape[1]), dtype=np.uint8)
 
-    # Add the mask to the expanded mask
-    for y_pos in range(mask_location_in_box[1], mask_location_in_box[3]):
-        for x_pos in range(mask_location_in_box[0], mask_location_in_box[2]):
-            expanded_mask[y_pos, x_pos] = mask[y_pos - mask_location_in_box[1], x_pos - mask_location_in_box[0]]
+    # Apply the mask to the expanded mask
+    # The first step is to identify where in the expanded mask the original mask is to lie.
+    # This will be tracked with an offset coordinate.
+    # For example:
+    #   mask_border =   [110, 55, 150, 100]
+    #   dest_box =      [100, 50, 200, 200]
+    #   The offset is (10, 5)
+    #
+    # To simplify the process of copying the mask onto the expanded mask with the offset, we will use
+    # a function: _assign_with_offset(matrix = expanded_mask, offset = (10, 5), index = (i, j), value = mask[i][j]).
+
+    def _assign_with_offset(matrix, offset, input_index, value):
+        '''
+        Assign a value to a matrix with an offset.
+
+        Args:
+            matrix: A numpy array.
+            offset: A tuple of two numbers representing the offset.
+            index: A tuple of two numbers representing the index of the matrix to assign the value to.
+            value: The value to assign to the matrix.
+
+        Returns:
+            None
+        
+        Notes:
+            The matrix is modified in place.
+            The format of the offset and index is (y, x).
+        '''
+        index = list(input_index)
+        index[0] += offset[0]
+        index[1] += offset[1]
+
+        matrix[index[0]][index[1]] = value
+
+    # Calculate the offset
+    offset = (mask_border[1] - dest_box[1], mask_border[0] - dest_box[0])
+
+    # Iterate over the mask. The format of the mask shape is (height, width).
+    for i in range(mask.shape[0]):
+        for j in range(mask.shape[1]):
+            # Assign the value of the mask to the expanded mask
+            try:
+                _assign_with_offset(expanded_mask, offset, (i, j), mask[i][j])
+            except IndexError:
+                # Print a diagnostic message with the sizes of the mask and the expanded mask and the offset
+                print("Error: The mask is too large for the expanded mask.")
+                print("Mask shape: {}".format(mask.shape))
+                print("Expanded mask shape: {}".format(expanded_mask.shape))
+                print("Offset: {}".format(offset))
 
 
     return expanded_mask
