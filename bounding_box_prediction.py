@@ -38,14 +38,14 @@ def _crop_image(example, bbox):
     bbox_rect = (bbox[0],bbox[1],bbox[0]+bbox[2],bbox[1]+bbox[3])
     return example.crop(bbox_rect)
 
-def _non_max_suppersion(boxes, scores, max_bboxes):
+def _non_max_suppersion(boxes, scores, max_bboxes, iou_threshold, score_threshold):
     nms_boxes = dict()    
     for i in range(0,11):
         length = len(scores[i])
         if i in boxes and not i == 1 :
             box = np.asarray(boxes[i], dtype=np.int32).reshape(length,4)
             score = np.asarray(scores[i])
-            selected_indices = tf.image.non_max_suppression(box, score,max_bboxes,iou_threshold=0.3, score_threshold = 11.0)
+            selected_indices = tf.image.non_max_suppression(box, score,max_bboxes,iou_threshold, score_threshold)
             nms_boxes[i] = tf.gather(box, selected_indices).numpy()
     return nms_boxes
 
@@ -64,13 +64,13 @@ def _draw_bbox(boxes, image_path, final_path):
         
     cv2.imwrite(final_path, image)
 
-def predict_image_with_nms(image_path,final_path,  model_path, max_bboxes):
+def predict_image_with_nms(image_path,final_path,  model_path, max_bboxes, iou_threshold, score_threshold):
     sorted_bbox,scores = _predict_image(image_path,model_path)
-    box = _non_max_suppersion(sorted_bbox,scores,max_bboxes)
+    box = _non_max_suppersion(sorted_bbox,scores,max_bboxes, iou_threshold,score_threshold)
     _draw_bbox(box,image_path,final_path)
 
 def predict_image_without_nms(image_path,final_path,  model_path):
-    sorted_bbox,scores, max_bboxes  = _predict_image(image_path,model_path)
+    sorted_bbox,scores  = _predict_image(image_path,model_path)
     boxes= dict()
     for i in range (0,11):
         if i in sorted_bbox and not i == 1:
@@ -78,5 +78,5 @@ def predict_image_without_nms(image_path,final_path,  model_path):
             boxes[i] = np.asarray(sorted_bbox[i], dtype=np.int32).reshape(length,4)
     _draw_bbox(sorted_bbox,image_path,final_path)
 
-predict_image_with_nms("COCO_test2014_000000003901.jpg", "coco_test.jpg","model/saved_model/efficientnet_b1", 20)
+predict_image_with_nms("COCO_test2014_000000003901.jpg", "coco_test.jpg","model/saved_model/efficientnet_b1", 20, 0.3, 11.0)
    
