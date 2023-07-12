@@ -77,4 +77,3 @@ def predict_image_without_nms(image_path,final_path,  model_path):
             length = len(scores[i])
             boxes[i] = np.asarray(sorted_bbox[i], dtype=np.int32).reshape(length,4)
     _draw_bbox(sorted_bbox,image_path,final_path)
-   
