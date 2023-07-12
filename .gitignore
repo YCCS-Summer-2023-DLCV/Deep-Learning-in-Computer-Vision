@@ -6,3 +6,4 @@ validation/
 .vscode
 saved_model/
 logs/
+.out
