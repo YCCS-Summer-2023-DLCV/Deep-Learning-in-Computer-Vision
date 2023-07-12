@@ -77,6 +77,4 @@ def predict_image_without_nms(image_path,final_path,  model_path):
             length = len(scores[i])
             boxes[i] = np.asarray(sorted_bbox[i], dtype=np.int32).reshape(length,4)
     _draw_bbox(sorted_bbox,image_path,final_path)
-
-predict_image_with_nms("COCO_test2014_000000003901.jpg", "coco_test.jpg","model/saved_model/efficientnet_b1", 20, 0.3, 11.0)
    
