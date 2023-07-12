@@ -38,7 +38,7 @@ def _crop_image(example, bbox):
     bbox_rect = (bbox[0],bbox[1],bbox[0]+bbox[2],bbox[1]+bbox[3])
     return example.crop(bbox_rect)
 
-def _non_max_suppersion(boxes, scores, max_bboxes, iou_threshold, score_threshold):
+def _non_max_suppression(boxes, scores, max_bboxes, iou_threshold, score_threshold):
     nms_boxes = dict()    
     for i in range(0,11):
         length = len(scores[i])
@@ -66,7 +66,7 @@ def _draw_bbox(boxes, image_path, final_path):
 
 def predict_image_with_nms(image_path,final_path,  model_path, max_bboxes, iou_threshold, score_threshold):
     sorted_bbox,scores = _predict_image(image_path,model_path)
-    box = _non_max_suppersion(sorted_bbox,scores,max_bboxes, iou_threshold,score_threshold)
+    box = _non_max_suppression(sorted_bbox,scores,max_bboxes, iou_threshold,score_threshold)
     _draw_bbox(box,image_path,final_path)
 
 def predict_image_without_nms(image_path,final_path,  model_path):
