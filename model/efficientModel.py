@@ -4,31 +4,45 @@ import os
 import tensorflow as tf
 from tensorflow import keras
 from keras import layers
+from sklearn.utils import class_weight
 
 
 
 image_resize = (120,120)
 train_ds = keras.utils.image_dataset_from_directory(
-    "dataset/train",
+    "dataset/foods-ss/train",
     validation_split=0.2,
     subset="training",
     seed=123,
     image_size=image_resize,
-    batch_size=32
+    batch_size=64
 )
 val_ds = keras.utils.image_dataset_from_directory(
-    "dataset/validation",
+    "dataset/foods-ss/train",
     validation_split=0.2,
     subset="validation",
     seed=123,
     image_size=image_resize,
-    batch_size=32
+    batch_size=64
 )
+test_ds = keras.utils.image_dataset_from_directory(
+    "dataset/foods-ss/validation",
+    seed=123,
+    image_size=image_resize,
+    batch_size=64
+)
+
 class_names = train_ds.class_names
 print(class_names)
+
+#I am going to pass in weights I personally calculated bassed off the following formula:
+# (1/NumOfPicsInClass)*(totalPics/2)
+train_class_weights = {0: 13.8, 1: 0.257, 2: 8.9, 3: 10.3, 4: 10.8, 5: 8.4, 6: 9.8, 7: 27.16, 8: 12.4, 9: 12.7, 10: 21.68}
+print("Class WEights: ",train_class_weights)
+
 AUTOTUNE = tf.data.AUTOTUNE
-train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
-val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
+train_ds = train_ds.shuffle(1000).prefetch(buffer_size=AUTOTUNE)
+val_ds = val_ds.prefetch(buffer_size=AUTOTUNE)
 data_augmentation = keras.Sequential(
   [
     layers.RandomFlip("horizontal_and_vertical",
@@ -60,7 +74,7 @@ feature_batch_average = global_average_layer(feature_batch)
 print(feature_batch_average.shape)
 
 #convert to number of classes - ie computer will now guess with class an image belongs to
-prediction_layer = tf.keras.layers.Dense(10)
+prediction_layer = tf.keras.layers.Dense(11)
 prediction_batch = prediction_layer(feature_batch_average)
 print(prediction_batch.shape)
 
@@ -73,7 +87,7 @@ x = tf.keras.layers.Dropout(0.25)(x)
 outputs = prediction_layer(x)
 model = tf.keras.Model(inputs, outputs)
 
-base_learning_rate = 0.0003
+base_learning_rate = 0.0004
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
               loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
@@ -81,30 +95,12 @@ model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rat
 len(model.trainable_variables)
 
 
-def lr_scheduler(epoch, lr):
-  if epoch <5:
-    learning_rate = .0005
-  elif epoch <25:
-    learning_rate = .0001
-  else:
-    learning_rate = base_learning_rate
-  return learning_rate
-
-lr_sched_callback = tf.keras.callbacks.LearningRateScheduler(lr_scheduler,verbose=1)
-
-
-initial_epochs = 25 #plato after 8 epochs
-loss0, accuracy0 = model.evaluate(val_ds)
-print("initial loss: {:.2f}".format(loss0))
-print("initial accuracy: {:.2f}".format(accuracy0))
+initial_epochs = 8 #plato after 8 epochs
 
 history = model.fit(train_ds,
                     epochs=initial_epochs,
                     validation_data=val_ds,
-                    callbacks=[lr_sched_callback])
-
-#model.save('saved_model/transferedCocoModel10ClassAnimal')
-# about 75% accuracy
+                    class_weight=train_class_weights)
 
 #now we finetune:------
 
@@ -119,20 +115,34 @@ fine_tune_at = 100
 for layer in base_model.layers[:fine_tune_at]:
   layer.trainable = False
 
-model.compile(optimizer = tf.keras.optimizers.RMSprop(learning_rate=base_learning_rate/10),
+model.compile(optimizer = tf.keras.optimizers.Adam(learning_rate=base_learning_rate/10),
               loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
 model.summary()
 
-fine_tune_epochs = 30
+fine_tune_epochs = 15 #platos after this
 total_epochs =  initial_epochs + fine_tune_epochs
+
+def lr_scheduler(epoch, lr):
+  if epoch <initial_epochs+15:
+    learning_rate = base_learning_rate/10
+  elif epoch <initial_epochs+30:
+    learning_rate = base_learning_rate/15
+  else:
+    learning_rate = base_learning_rate
+  return learning_rate
+
+lr_sched_callback = tf.keras.callbacks.LearningRateScheduler(lr_scheduler,verbose=1)
 
 history_fine = model.fit(train_ds,
                          epochs=total_epochs,
                          initial_epoch=history.epoch[-1],
-                         validation_data=val_ds)
+                         validation_data=val_ds,
+                         callbacks= lr_sched_callback,
+                         class_weight=train_class_weights)
 
+model.evaluate(test_ds)
 
 acc = history_fine.history['accuracy']
 val_acc = history_fine.history['val_accuracy']
@@ -159,11 +169,8 @@ plt.plot([initial_epochs-1,initial_epochs-1],
 plt.legend(loc='upper right')
 plt.title('Training and Validation Loss')
 plt.xlabel('epoch')
-plt.savefig("ef2mk2Rates")
+plt.savefig("SelectiveSWeighted")
 
-
-tf.keras.models.save_model(
-    model,
-    'saved_model/Efficient2mk2',
-)
-model.save('saved_model/Efficient2mk2bkup')
+model.save('saved_model/SelectiveSWeighted.keras')
+#finishes T98 and V93
+print("Program End")
