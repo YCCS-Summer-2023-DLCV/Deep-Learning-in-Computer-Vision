@@ -21,7 +21,7 @@ from segmentation_data.example import Example
 from segmentation_data.conversions import convert_box_type
 
 
-def process_example(input_example, classes):
+def process_example(input_example, classes, use_selective_search: bool = True):
     '''
     Process a single example.
 
@@ -31,9 +31,10 @@ def process_example(input_example, classes):
 
     Returns:
         A list of dictionaries. Each dictionary has the following keys:
-        - image: A numpy array of shape (height, width, 3) and dtype uint8.
+        - image: A PIL image.
         - mask: A numpy array of shape (height, width) and dtype uint8.
         - label: A string representing the class label.
+        - id: The detection id.
     
     Notes:
         The image is a numpy array of shape (height, width, 3) and dtype
@@ -54,26 +55,30 @@ def process_example(input_example, classes):
     # Load the image as a numpy array
     image = example.get_image()
 
-    # Get the selective search boxes
-    ss_boxes = selective_search_fast(example.get_path_to_image())
+    ss_boxes = None
+    if use_selective_search:
+        # Get the selective search boxes
+        ss_boxes = selective_search_fast(example.get_path_to_image())
 
-    # Coco stores the bounds as [x, y, w, h] and as a ratio of the image size.
-    # The selective search boxes are [x, y, w, h]. It is stored in pixel values.
-    # Convert the selective search boxes to the same format as Coco.
-    for ss_box in ss_boxes:
-        ss_box = convert_box_type(ss_box, "selective_search", "coco", example.get_image_size())
+        # Coco stores the bounds as [x, y, w, h] and as a ratio of the image size.
+        # The selective search boxes are [x, y, w, h]. It is stored in pixel values.
+        # Convert the selective search boxes to the same format as Coco.
+        for ss_box in ss_boxes:
+            ss_box = convert_box_type(ss_box, "selective_search", "coco", example.get_image_size())
 
     # For each object, pick the box that best fits the object,
     # crop the image, and expand the mask to fit the box.
     # Only process objects in the classes list.
     objects = []
-    for label, bbox, mask in zip(example.get_labels(), example.get_bounding_boxes(), example.get_masks()):
+    for label, bbox, mask, detection_id in zip(example.get_labels(), example.get_bounding_boxes(), example.get_masks(), example.get_detection_ids()):
         # Only process objects in the classes list
         if label not in classes:
             continue
         
         # Get the box that best fits the object
-        box = _pick_ss_box(ss_boxes, bbox)
+        box = bbox
+        if use_selective_search:
+            box = _pick_ss_box(ss_boxes, bbox)
 
         # Crop the image
         cropped_image = example.get_cropped_image(box)
@@ -85,7 +90,8 @@ def process_example(input_example, classes):
         objects.append({
             "image": cropped_image,
             "mask": expanded_mask,
-            "label": label
+            "label": label,
+            "id": detection_id
         })
 
     return objects
@@ -153,12 +159,12 @@ def _pick_ss_box(ss_boxes, bbox):
 
     # Iterate over the ss_boxes. For each box, check if it encompasses the object.
     # If it does, and is not too large, return it.
-    index = 0
     for box in ss_boxes:
         # Check if the box encompasses the object
         if _box_encompasses_other_box(box, bbox):
             # Check if the box is too large
             if _box_is_not_too_large(box, bbox):
+                print("Found a box")
                 return box
             
     # If no box is found, return the original box
@@ -206,6 +212,8 @@ def _box_is_not_too_large(a, b):
         The boxes are in the format [x, y, w, h].
         "Not too large" means that the area of box a is less than twice the area of box b.
     '''
+    EXPANSION_CONSTANT = 1
+
     # Get the area of box a
     area_a = a[2] * a[3]
 
@@ -216,7 +224,7 @@ def _box_is_not_too_large(a, b):
     ratio = area_a / area_b
 
     # If the ratio is less than 2, return True
-    if ratio < 4:
+    if ratio < EXPANSION_CONSTANT:
         return True
     
     return False

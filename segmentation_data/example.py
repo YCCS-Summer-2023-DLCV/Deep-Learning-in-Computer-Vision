@@ -242,6 +242,44 @@ class Example():
         image_path = self.example["filepath"]
 
         return image_path
+    
+    def get_detection_id_(self, detection_index: int) -> str:
+        '''
+        Get the detection id for the detection.
+
+        Args:
+            detection_index: The index of the detection.
+
+        Returns:
+            The detection id.
+
+        Raises:
+            IndexError: If the detection index is out of range.
+        '''
+
+        # If the index is out of range, raise an error
+        self._check_index(detection_index)
+
+        # Get the detection
+        detection = self.detections[detection_index]
+
+        # Get the detection id
+        detection_id = detection['id']
+
+        return detection_id
+    
+    def get_detection_ids(self) -> list[str]:
+        '''
+        Get the detection ids for all detections.
+
+        Returns:
+            A list of detection ids.
+        '''
+
+        # Get the detection ids
+        detection_ids = [detection['id'] for detection in self.detections]
+
+        return detection_ids
 
     def _check_index(self, index):
         '''
