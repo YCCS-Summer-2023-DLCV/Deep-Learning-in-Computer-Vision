@@ -77,3 +77,9 @@ def predict_image_without_nms(image_path,final_path,  model_path):
             length = len(scores[i])
             boxes[i] = np.asarray(sorted_bbox[i], dtype=np.int32).reshape(length,4)
     _draw_bbox(sorted_bbox,image_path,final_path)
+
+image_names = ["apple","sandwich","carrot","broccoli", "pizza"]
+
+for name in image_names:
+    for i in range(1,5):
+        predict_image_with_nms("/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/coco_test/"+name+"_"+ str(i)+".jpg", "/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/coco_inference/"+name+"_"+ str(i)+"_final.jpg","/home/ec2-user/Deep-Learning-in-Computer-Vision/model/saved_model/efficientnet_b1",100,0.3,11.0)
