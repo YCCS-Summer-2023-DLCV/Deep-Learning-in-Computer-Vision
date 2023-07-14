@@ -5,7 +5,7 @@ def _set_path():
     # This is necessary to import the selective_search module
 
     # Get the path to the venv
-    venv_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    venv_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
     # Add the venv path to the path
     import sys
@@ -84,7 +84,14 @@ def process_example(input_example, classes, use_selective_search: bool = True):
         cropped_image = example.get_cropped_image(box)
 
         # Expand the mask
-        expanded_mask = _expand_mask(mask, bbox, box, example.get_image_size())
+        expanded_mask = None
+        if use_selective_search:
+            expanded_mask = _expand_mask(mask, bbox, box, example.get_image_size())
+        else:
+            expanded_mask = mask.copy()
+
+        expanded_mask = expanded_mask.astype(np.uint8)
+        expanded_mask *= 255
 
         # Add the object to the list
         objects.append({
@@ -245,7 +252,6 @@ def _expand_mask(mask, mask_border, dest_box, image_shape):
     Notes:
         The mask is expanded by a few pixels to fit the box.
     '''
-
     # Convert the mask location to a PIL box
     mask_border = convert_box_type(mask_border, "coco", "pil", image_shape)
 
