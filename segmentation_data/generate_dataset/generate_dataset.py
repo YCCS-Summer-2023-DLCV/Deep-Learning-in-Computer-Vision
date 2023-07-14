@@ -1,6 +1,7 @@
 import os
 
 import fiftyone.zoo as foz
+from tqdm import tqdm
 from PIL import Image
 
 from process_example import process_example
@@ -12,43 +13,50 @@ def generate_dataset(ds_name, split, classes):
         "coco-2017",
         split = split,
         classes = classes,
-        label_types = ["segmentations"],
-        max_samples = 10
+        label_types = ["segmentations"]
     )
 
-    split_dir = _create_directories(ds_name, split, classes)
+    directories = _create_directories(ds_name, split, classes)
 
-    for example in dataset:
+    for example in tqdm(dataset):
         datapoints = process_example(example, classes, use_selective_search = False)
         for datapoint in datapoints:
-            _save_datapoint(datapoint, split_dir)
+            _save_datapoint(datapoint, directories)
 
-def _save_datapoint(datapoint, split_dir):
+def _save_datapoint(datapoint, directories):
     # Convert the image and mask from numpy arrays to images
     image = datapoint["image"]
     mask = Image.fromarray(datapoint["mask"])
 
     # Create the path for each file
-    base_path = os.path.join(split_dir, datapoint["label"], datapoint["id"])
-    image_path = base_path + ".jpeg"
-    mask_path = base_path + "-mask" + "..jpeg"
+    example_path = directories[0]
+    mask_path = directories[1]
+    
+    example_path = os.path.join(example_path, datapoint["id"] + ".jpeg")
+    mask_path = os.path.join(mask_path, datapoint["id"] + ".jpeg")
 
     # Save each one
-    image.save(image_path)
-    mask.save(mask_path)
+    try:
+        image.save(example_path)
+        mask.save(mask_path)
+    except Exception as error:
+        with open("errors.txt", "a") as file:
+            file.write("Failed to save image or mask of" + datapoint["id"] + "\n")
+            file.write(str(error) + "\n")
+            file.write("This was the attempted path: " + example_path)
 
 def _create_directories(ds_name, split, classes):
     split_dir = os.path.join(ROOT_DIR, ds_name, split)
+    anno_dir = os.path.join(ROOT_DIR, ds_name, str(split) + "-anno")
 
     def _ensure_directory_exists(dir):
         if not os.path.exists(dir):
             os.makedirs(dir)
 
-    for label in classes:
-        label_dir = os.path.join(split_dir, label)
-        _ensure_directory_exists(label_dir)
+    _ensure_directory_exists(split_dir)
+    _ensure_directory_exists(anno_dir)
 
-    return split_dir
+    return split_dir, anno_dir
     
 
 if __name__ == "__main__":
