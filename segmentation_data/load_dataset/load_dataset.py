@@ -71,8 +71,6 @@ if __name__ == "__main__":
     dataset = load_dataset(path, "train")
 
     for example in dataset.take(1):
-        print(example)
-
         image, mask = example
 
         plt.figure(figsize = (7, 7))
