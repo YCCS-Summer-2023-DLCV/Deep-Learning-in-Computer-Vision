@@ -8,7 +8,7 @@ Date: 07/17/2023
 Version: 1.0.0
 
 Functions:
-    load_dataset(path_to_ds, split) -> tf.data.Dataset
+    `load_dataset(path_to_ds, split, IMG_SIZE, shuffle)` -> `tf.data.Dataset`
         Loads the dataset from the given path and split.
 '''
 
@@ -16,7 +16,7 @@ import os
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
-def load_dataset(path_to_ds, split, IMG_SIZE = [128, 128]):
+def load_dataset(path_to_ds, split, IMG_SIZE = [128, 128], shuffle = False):
     '''
     Loads the dataset from the given path and split.
 
@@ -24,6 +24,7 @@ def load_dataset(path_to_ds, split, IMG_SIZE = [128, 128]):
         path_to_ds (str): Path to the dataset.
         split (str): Split to load. Can be either "train" or "val".
         IMG_SIZE (list): Size to resize the images to. Defaults to [128, 128].
+        shuffle (bool): Whether or not to shuffle the dataset. Defaults to False.
 
     Returns:
         dataset (tf.data.Dataset): Dataset containing the images and masks.
@@ -61,6 +62,10 @@ def load_dataset(path_to_ds, split, IMG_SIZE = [128, 128]):
 
     # Zip the images and masks together
     dataset = tf.data.Dataset.zip((images, masks))
+
+    # Shuffle the dataset if necessary
+    if shuffle:
+        dataset = dataset.shuffle(1000)
 
     return dataset
 
