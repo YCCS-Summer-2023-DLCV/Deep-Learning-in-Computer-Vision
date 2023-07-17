@@ -22,7 +22,7 @@ def _set_path():
 
 _set_path()
 
-from selective_search import selective_search_fast
+from inference.selective_search import selective_search_fast
 
 SS_EXAMPLES_PER_ITEM = 5
 
