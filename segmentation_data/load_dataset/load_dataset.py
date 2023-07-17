@@ -1,10 +1,53 @@
+'''
+This file contains the function to load the dataset.
+
+Author: Tuvya Macklin
+
+Date: 07/17/2023
+
+Version: 1.0.0
+
+Functions:
+    load_dataset(path_to_ds, split) -> tf.data.Dataset
+        Loads the dataset from the given path and split.
+'''
+
 import os
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
-IMG_SIZE = [128, 128]
+def load_dataset(path_to_ds, split, IMG_SIZE = [128, 128]):
+    '''
+    Loads the dataset from the given path and split.
 
-def load_dataset(path_to_ds, split):
+    Parameters:
+        path_to_ds (str): Path to the dataset.
+        split (str): Split to load. Can be either "train" or "val".
+        IMG_SIZE (list): Size to resize the images to. Defaults to [128, 128].
+
+    Returns:
+        dataset (tf.data.Dataset): Dataset containing the images and masks.
+
+    Note:
+        The dataset is loaded as a tf.data.Dataset object. The dataset is
+        loaded as a bunch of file paths and then decoded into images. The
+        images are then resized to the IMG_SIZE which is [128, 128] by default.
+        The dataset is then zipped together with the masks and returned.
+    '''
+
+    # Define the functions to process the paths
+    def _decode_image(image):
+        image = tf.io.decode_jpeg(image)
+
+        return tf.image.resize(image, IMG_SIZE)
+
+    def _process_path(file_path):
+        image = tf.io.read_file(file_path)
+
+        image = _decode_image(image)
+
+        return image
+
     # Load the dataset as a bunch of file paths
     path_to_images = os.path.join(path_to_ds, split, "*.jpeg")
     path_to_masks = os.path.join(path_to_ds, split + "-anno", "*.jpeg")
@@ -12,43 +55,16 @@ def load_dataset(path_to_ds, split):
     images = tf.data.Dataset.list_files(path_to_images, shuffle = False)
     masks = tf.data.Dataset.list_files(path_to_masks, shuffle = False)
 
-    images = images.map(process_path, num_parallel_calls = tf.data.AUTOTUNE)
-    masks = masks.map(process_path, num_parallel_calls = tf.data.AUTOTUNE)
+    # Turn the file paths into images
+    images = images.map(_process_path, num_parallel_calls = tf.data.AUTOTUNE)
+    masks = masks.map(_process_path, num_parallel_calls = tf.data.AUTOTUNE)
 
+    # Zip the images and masks together
     dataset = tf.data.Dataset.zip((images, masks))
 
     return dataset
 
-def get_path_to_mask(path_to_image):
 
-    # The paths are in this format:
-    # /home/ec2-user/Documents/datasets/segmentation-dataset/train/64b195d0249c1827cddd4fb3.jpeg
-    # It needs to turn into:
-    # /home/ec2-user/Documents/datasets/segmentation-dataset/train-anno/64b195d0249c1827cddd4fb3.jpeg
-    # We need to get the directory and append "-anno"
-
-    print(path_to_image)
-
-    directory = os.path.dirname(path_to_image)
-    file_name = os.path.basename(path_to_image)
-
-    directory += "-anno"
-
-    path_to_mask = os.path.join(directory, file_name)
-
-    return path_to_mask
-
-def decode_image(image):
-    image = tf.io.decode_jpeg(image)
-
-    return tf.image.resize(image, IMG_SIZE)
-
-def process_path(file_path):
-    image = tf.io.read_file(file_path)
-
-    image = decode_image(image)
-
-    return image
 
 if __name__ == "__main__":
     path = "/home/ec2-user/Documents/datasets/segmentation-dataset"
