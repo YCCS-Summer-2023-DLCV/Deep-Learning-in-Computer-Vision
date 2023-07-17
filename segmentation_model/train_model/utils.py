@@ -92,3 +92,41 @@ def normalize_example(image, mask):
     mask = tf.cast(mask, tf.float32) / 255.0
 
     return image, mask
+
+def create_mask(prediction):
+    # Get the maximum value along the last axis
+    # To elaborate:
+    #   The prediction tensor has shape (batch_size, height, width, num_classes)
+    #   The last axis is the axis with the num_classes
+    #   The maximum value along this axis is the predicted class
+    #   The predicted class is the mask
+    prediction = tf.argmax(prediction, axis = -1)
+    prediction = prediction[..., tf.newaxis]
+
+    return prediction[0]
+
+def show_predictions(dataset, num = 1, model = None, root_dir = "segmentation_model/train_model/plots", file_name = "predictions"):
+    '''
+    Display a list of images and their masks
+
+    Args:
+        dataset (tf.data.Dataset): The dataset to get the images and masks from
+        num (int): The number of images to display
+        model (tf.keras.Model): The model to use to predict the masks
+        root_dir (str): The root directory to save the image to
+        file_name (str): The name of the file to save the image to
+    
+    Returns:
+        None
+
+    Side Effects:
+        Saves the image to a file
+    '''
+    
+    for image, mask in dataset.take(num):
+        pred_mask = model.predict(image)
+        display(
+            [image[0], mask[0], create_mask(pred_mask)],
+            root_dir = root_dir,
+            file_name = file_name
+        )

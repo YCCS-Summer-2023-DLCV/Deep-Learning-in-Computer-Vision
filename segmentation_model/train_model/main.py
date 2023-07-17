@@ -14,10 +14,12 @@ def _set_path():
 _set_path()
 
 import tensorflow as tf
+from tensorflow_examples.models.pix2pix import pix2pix
+
 import matplotlib.pyplot as plt
 
 from segmentation_model.load_dataset.load_dataset import load_dataset
-from segmentation_model.train_model.utils import display, normalize_example
+from segmentation_model.train_model.utils import display, normalize_example, show_predictions, create_mask
 
 path_to_ds = "/home/ec2-user/Documents/datasets/segmentation-dataset"
 
@@ -46,8 +48,9 @@ class AugmentLayer(tf.keras.layers.Layer):
 
         return inputs, mask
     
-train_ds = train_ds.cache.map(AugmentLayer).prefetch(buffer_size = tf.data.AUTOTUNE)
-val_ds = val_ds.cache.map(AugmentLayer).prefetch(buffer_size = tf.data.AUTOTUNE)
+BATCH_SIZE = 32
+train_ds = train_ds.cache().batch(BATCH_SIZE).map(AugmentLayer()).prefetch(buffer_size = tf.data.AUTOTUNE)
+val_ds = val_ds.cache().batch(BATCH_SIZE).map(AugmentLayer()).prefetch(buffer_size = tf.data.AUTOTUNE)
 
 # Define the model
 base_model = tf.keras.applications.MobileNetV2(input_shape = [128, 128, 3], include_top = False)
@@ -61,3 +64,55 @@ layer_names = [
 ]
 
 base_model_outputs = [base_model.get_layer(name).output for name in layer_names]
+
+down_stack = tf.keras.Model(inputs = base_model.input, outputs = base_model_outputs)
+down_stack.trainable = False
+
+# Build the upstack which goes from 4x4 -> 8x8 -> ... -> 64x64
+up_stack = [
+    pix2pix.upsample(512, 3), 
+    pix2pix.upsample(256, 3),
+    pix2pix.upsample(128, 3),
+    pix2pix.upsample(64, 3),
+]
+
+def get_unet_model(output_channels: int):
+    inputs = tf.keras.layers.Input(shape = [128, 128, 3])
+
+    skips = down_stack(inputs)
+    x = skips[-1]
+    skips = reversed(skips[:-1])
+
+    for up, skip in zip(up_stack, skips):
+        x = up(x)
+        concat = tf.keras.layers.Concatenate()
+        x = concat([x, skip])
+
+    last = tf.keras.layers.Conv2DTranspose(
+        filters = output_channels,
+        kernel_size = 3,
+        strides = 2,
+        padding = "same"
+    )
+
+    x = last(x)
+
+    return tf.keras.Model(inputs = inputs, outputs = x)
+
+model = get_unet_model(output_channels = 3)
+model.compile(
+    optimizer = "adam",
+    loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits = True),
+    metrics = ["accuracy"]
+)
+
+show_predictions(val_ds, 1, model)
+
+EPOCHS = 10
+model.fit(
+    train_ds,
+    epochs = EPOCHS,
+    validation_data = val_ds
+)
+
+show_predictions(val_ds, 1, model)
