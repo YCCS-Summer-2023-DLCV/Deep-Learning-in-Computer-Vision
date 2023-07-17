@@ -5,19 +5,29 @@ IMG_SIZE = [128, 128]
 
 def load_dataset(path_to_ds, split):
     # Load the dataset as a bunch of file paths
-    path_to_examples = os.path.join(path_to_ds, split, "*.jpeg")
+    path_to_images = os.path.join(path_to_ds, split, "*.jpeg")
+    path_to_masks = os.path.join(path_to_ds, split + "-anno", "*.jpeg")
 
-    files_for_ds = tf.data.Dataset.list_files(path_to_examples)
+    images = tf.data.Dataset.list_files(path_to_images, shuffle = False)
+    masks = tf.data.Dataset.list_files(path_to_masks, shuffle = False)
+
+    dataset = tf.data.Dataset.zip((images, masks))
+
+    for example in dataset.take(1):
+        print(example)
+
+    quit()
+
     print("Loaded files")
     
-    dataset = files_for_ds.map(process_path, num_parallel_calls = tf.data.AUTOTUNE)
+    dataset = images.map(process_path, num_parallel_calls = tf.data.AUTOTUNE)
 
     return dataset
 
 def get_path_to_mask(path_to_image):
 
     # The paths are in this format:
-    # /home/ec2-user/Documents/datasets/segmentation-dataset/train/643.jpeg
+    # /home/ec2-user/Documents/datasets/segmentation-dataset/train/64b195d0249c1827cddd4fb3.jpeg
     # It needs to turn into:
     # /home/ec2-user/Documents/datasets/segmentation-dataset/train-anno/64b195d0249c1827cddd4fb3.jpeg
     # We need to get the directory and append "-anno"
