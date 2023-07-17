@@ -1,5 +1,6 @@
 import os
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 IMG_SIZE = [128, 128]
 
@@ -11,16 +12,10 @@ def load_dataset(path_to_ds, split):
     images = tf.data.Dataset.list_files(path_to_images, shuffle = False)
     masks = tf.data.Dataset.list_files(path_to_masks, shuffle = False)
 
+    images = images.map(process_path, num_parallel_calls = tf.data.AUTOTUNE)
+    masks = masks.map(process_path, num_parallel_calls = tf.data.AUTOTUNE)
+
     dataset = tf.data.Dataset.zip((images, masks))
-
-    for example in dataset.take(1):
-        print(example)
-
-    quit()
-
-    print("Loaded files")
-    
-    dataset = images.map(process_path, num_parallel_calls = tf.data.AUTOTUNE)
 
     return dataset
 
@@ -49,15 +44,11 @@ def decode_image(image):
     return tf.image.resize(image, IMG_SIZE)
 
 def process_path(file_path):
-    path_to_mask = get_path_to_mask(file_path)
-
     image = tf.io.read_file(file_path)
-    mask = tf.io.read_file(path_to_mask)
 
     image = decode_image(image)
-    mask = decode_image(mask)
 
-    return image, mask
+    return image
 
 if __name__ == "__main__":
     path = "/home/ec2-user/Documents/datasets/segmentation-dataset"
@@ -65,3 +56,14 @@ if __name__ == "__main__":
 
     for example in dataset.take(1):
         print(example)
+
+        image, mask = example
+
+        plt.figure(figsize = (7, 7))
+        plt.subplot(1, 2, 1)
+        plt.imshow(image.numpy().astype("uint8"))
+
+        plt.subplot(1, 2, 2)
+        plt.imshow(mask.numpy())
+
+        plt.savefig("plot.png")
