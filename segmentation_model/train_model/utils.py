@@ -28,7 +28,7 @@ Version: 1.0.0
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import os
-
+import datetime
 
 # Display an example with its mask
 def display(display_list, to_file = True, root_dir = "segmentation_model/train_model/plots/display", file_name = "img_and_mask", count = None):
@@ -153,7 +153,7 @@ def show_predictions(dataset, model, num = None, root_dir = "segmentation_model/
             file_name = file_name
         )
 
-def save_model(model, model_name, root_model_dir = "/home/ec2-user/Documents/Repos/Deep-Learning-in-Computer-Vision/segmentation_model/models"):
+def save_model(model, model_name, root_model_dir = "segmentation_model/models"):
     '''
     Saves a model to the given directory.
 
@@ -170,7 +170,7 @@ def save_model(model, model_name, root_model_dir = "/home/ec2-user/Documents/Rep
     
     Notes:
         The model is saved to root_model_dir/model_name/model.keras.
-        The root_model_dir is "/home/ec2-user/Documents/Repos/Deep-Learning-in-Computer-Vision/segmentation_model/models" by default.
+        The root_model_dir is "segmentation_model/models" by default.
     '''
     # Ensure that a directory exists for the model
     # The path should be model_dir/model_name
@@ -179,7 +179,7 @@ def save_model(model, model_name, root_model_dir = "/home/ec2-user/Documents/Rep
     # Save the model
     model.save(os.path.join(root_model_dir, model_name, "model.keras"))
 
-def load_model(model_name, root_model_dir = "/home/ec2-user/Documents/Repos/Deep-Learning-in-Computer-Vision/segmentation_model/models", path_to_model = None):
+def load_model(model_name, root_model_dir = "/segmentation_model/models", path_to_model = None):
     '''
     Loads a model from the given directory.
 
@@ -196,7 +196,7 @@ def load_model(model_name, root_model_dir = "/home/ec2-user/Documents/Repos/Deep
     
     Notes:
         The model is loaded from root_model_dir/model_name/model.keras.
-        The root_model_dir is "/home/ec2-user/Documents/Repos/Deep-Learning-in-Computer-Vision/segmentation_model/models" by default.
+        The root_model_dir is "segmentation_model/models" by default.
     '''
     # Ensure that the model file exists
     path = None
@@ -211,3 +211,26 @@ def load_model(model_name, root_model_dir = "/home/ec2-user/Documents/Repos/Deep
     # Load the model
     model = tf.keras.models.load_model(path)
     return model
+
+def get_tensorboard_callback(model_name: str, root_dir = "segmentation_model/models/.tensorboard"):
+    '''
+    Returns a TensorBoard callback for a model with the given name.
+
+    Parameters:
+        model_name (str): The name of the model.
+    
+    Returns:
+        A TensorBoard callback.
+    
+    Notes:
+        The TensorBoard callback is saved to root_tensorboard_dir/fit/model_name/current_date_and_time.
+
+        To view the TensorBoard, run the following command in the terminal:
+        ```
+        tensorboard --logdir root_tensorboard_dir/fit/model_name
+        ```
+        `root_tensorboard_dir` is the root directory for the TensorBoard callbacks. The default is .tensorboard.
+    '''
+    log_dir = os.path.join(root_dir, "fit", model_name, datetime.datetime.now().strftime("%Y.%m.%d-%H:%M:%S"))
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+    return tensorboard_callback

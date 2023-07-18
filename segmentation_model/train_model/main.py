@@ -19,7 +19,7 @@ from tensorflow_examples.models.pix2pix import pix2pix
 import matplotlib.pyplot as plt
 
 from segmentation_model.load_dataset.load_dataset import load_dataset
-from segmentation_model.train_model.utils import display, normalize_example, show_predictions, create_mask
+from segmentation_model.train_model.utils import display, normalize_example, show_predictions, save_model, get_tensorboard_callback
 
 path_to_ds = "/home/ec2-user/Documents/datasets/segmentation-dataset"
 
@@ -108,13 +108,18 @@ model.compile(
 
 show_predictions(val_ds, model, 1)
 
-EPOCHS = 10
+model_name = "20_epochs"
+
+tensorboard_callback = get_tensorboard_callback(model_name)
+
+EPOCHS = 20
 model.fit(
     train_ds,
     epochs = EPOCHS,
-    validation_data = val_ds
+    validation_data = val_ds,
+    callbacks = [tensorboard_callback]
 )
 
 show_predictions(val_ds, model, 1)
 
-model.save("model.keras")
+save_model(model, model_name)
