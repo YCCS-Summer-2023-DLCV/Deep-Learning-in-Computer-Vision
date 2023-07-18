@@ -37,17 +37,20 @@ def load_dataset(path_to_ds, split, IMG_SIZE = [128, 128], shuffle = False):
     '''
 
     # Define the functions to process the paths
-    def _decode_image(image):
-        image = tf.io.decode_jpeg(image)
+    def _decode_image(image, channels):
+        image = tf.io.decode_jpeg(image, channels = channels)
 
         return tf.image.resize(image, IMG_SIZE)
 
-    def _process_path(file_path):
-        image = tf.io.read_file(file_path)
+    def _process_path(channels = 0):
+        def process(file_path):
+            image = tf.io.read_file(file_path)
 
-        image = _decode_image(image)
+            image = _decode_image(image, channels = channels)
 
-        return image
+            return image
+
+        return process
 
     # Load the dataset as a bunch of file paths
     path_to_images = os.path.join(path_to_ds, split, "*.jpeg")
@@ -57,8 +60,8 @@ def load_dataset(path_to_ds, split, IMG_SIZE = [128, 128], shuffle = False):
     masks = tf.data.Dataset.list_files(path_to_masks, shuffle = False)
 
     # Turn the file paths into images
-    images = images.map(_process_path, num_parallel_calls = tf.data.AUTOTUNE)
-    masks = masks.map(_process_path, num_parallel_calls = tf.data.AUTOTUNE)
+    images = images.map(_process_path(3), num_parallel_calls = tf.data.AUTOTUNE)
+    masks = masks.map(_process_path(1), num_parallel_calls = tf.data.AUTOTUNE)
 
     # Zip the images and masks together
     dataset = tf.data.Dataset.zip((images, masks))

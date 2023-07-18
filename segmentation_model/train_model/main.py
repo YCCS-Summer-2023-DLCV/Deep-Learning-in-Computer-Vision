@@ -49,8 +49,8 @@ class AugmentLayer(tf.keras.layers.Layer):
         return inputs, mask
     
 BATCH_SIZE = 32
-train_ds = train_ds.cache().batch(BATCH_SIZE).map(AugmentLayer()).prefetch(buffer_size = tf.data.AUTOTUNE)
-val_ds = val_ds.cache().batch(BATCH_SIZE).map(AugmentLayer()).prefetch(buffer_size = tf.data.AUTOTUNE)
+train_ds = train_ds.batch(BATCH_SIZE).map(AugmentLayer()).prefetch(buffer_size = tf.data.AUTOTUNE)
+val_ds = val_ds.batch(BATCH_SIZE).map(AugmentLayer()).prefetch(buffer_size = tf.data.AUTOTUNE)
 
 # Define the model
 base_model = tf.keras.applications.MobileNetV2(input_shape = [128, 128, 3], include_top = False)
@@ -106,7 +106,7 @@ model.compile(
     metrics = ["accuracy"]
 )
 
-show_predictions(val_ds, 1, model)
+show_predictions(val_ds, model, 1)
 
 EPOCHS = 10
 model.fit(
@@ -115,4 +115,6 @@ model.fit(
     validation_data = val_ds
 )
 
-show_predictions(val_ds, 1, model)
+show_predictions(val_ds, model, 1)
+
+model.save("model.keras")

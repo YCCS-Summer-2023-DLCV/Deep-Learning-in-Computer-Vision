@@ -6,6 +6,16 @@ Functions:
         Display a list of images and their masks
     `ensure_directory_exists(dir)`
         Ensure that a directory exists
+    `normalize_example(image, mask)`
+        Normalize an image and its mask
+    `show_predictions(dataset, model, num)`
+        Show predictions for a dataset
+    `create_mask(pred_mask)`
+        Create a mask from a prediction
+    `save_model(model, model_name)`
+        Save a model
+    `load_model(model_name)`
+        Load a model
 
 Author: Tuvya Macklin
 
@@ -21,7 +31,7 @@ import os
 
 
 # Display an example with its mask
-def display(display_list, to_file = True, root_dir = "segmentation_model/train_model/plots", file_name = "img_and_mask", count = None):
+def display(display_list, to_file = True, root_dir = "segmentation_model/train_model/plots/display", file_name = "img_and_mask", count = None):
     '''
     Display a list of images and their masks
 
@@ -38,6 +48,8 @@ def display(display_list, to_file = True, root_dir = "segmentation_model/train_m
     Side Effects:
         Saves the image to a file
     '''
+
+    ensure_directory_exists(root_dir)
 
     plt.figure(figsize=(15, 15))
 
@@ -105,7 +117,7 @@ def create_mask(prediction):
 
     return prediction[0]
 
-def show_predictions(dataset, num = 1, model = None, root_dir = "segmentation_model/train_model/plots", file_name = "predictions"):
+def show_predictions(dataset, model, num = None, root_dir = "segmentation_model/train_model/plots/predictions", default_file_name = "prediction"):
     '''
     Display a list of images and their masks
 
@@ -122,11 +134,80 @@ def show_predictions(dataset, num = 1, model = None, root_dir = "segmentation_mo
     Side Effects:
         Saves the image to a file
     '''
-    
-    for image, mask in dataset.take(num):
+
+    multiple = True
+    if num is None:
+        num = 1
+        multiple = False
+
+    for index, (image, mask) in enumerate(dataset.take(num)):
         pred_mask = model.predict(image)
+
+        if multiple:
+            file_name = default_file_name + "-" + str(index)
+
+
         display(
             [image[0], mask[0], create_mask(pred_mask)],
             root_dir = root_dir,
             file_name = file_name
         )
+
+def save_model(model, model_name, root_model_dir = "/home/ec2-user/Documents/Repos/Deep-Learning-in-Computer-Vision/segmentation_model/models"):
+    '''
+    Saves a model to the given directory.
+
+    Parameters:
+        model (tf.keras.Model): The model to save.
+        model_name (str): The name of the model.
+        root_model_dir (str): The root directory for the models.
+    
+    Raises:
+        FileNotFoundError: If the model directory doesn't exist.
+    
+    Returns:
+        None
+    
+    Notes:
+        The model is saved to root_model_dir/model_name/model.keras.
+        The root_model_dir is "/home/ec2-user/Documents/Repos/Deep-Learning-in-Computer-Vision/segmentation_model/models" by default.
+    '''
+    # Ensure that a directory exists for the model
+    # The path should be model_dir/model_name
+    ensure_directory_exists(os.path.join(root_model_dir, model_name))
+
+    # Save the model
+    model.save(os.path.join(root_model_dir, model_name, "model.keras"))
+
+def load_model(model_name, root_model_dir = "/home/ec2-user/Documents/Repos/Deep-Learning-in-Computer-Vision/segmentation_model/models", path_to_model = None):
+    '''
+    Loads a model from the given directory.
+
+    Parameters:
+        model_name (str): The name of the model.
+        root_model_dir (str): The root directory for the models.
+        path_to_model (str): The path to the model file. If None, the path is root_model_dir/model_name/model.keras.
+    
+    Returns:
+        The loaded model.
+    
+    Raises:
+        FileNotFoundError: If the model file doesn't exist.
+    
+    Notes:
+        The model is loaded from root_model_dir/model_name/model.keras.
+        The root_model_dir is "/home/ec2-user/Documents/Repos/Deep-Learning-in-Computer-Vision/segmentation_model/models" by default.
+    '''
+    # Ensure that the model file exists
+    path = None
+    if path_to_model is None:
+        path = os.path.join(root_model_dir, model_name, "model.keras")
+    else:
+        path = path_to_model
+   
+    if not os.path.isfile(path):
+        raise FileNotFoundError
+
+    # Load the model
+    model = tf.keras.models.load_model(path)
+    return model
