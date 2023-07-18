@@ -55,6 +55,15 @@ val_ds = val_ds.batch(BATCH_SIZE).map(AugmentLayer()).prefetch(buffer_size = tf.
 # Define the model
 base_model = tf.keras.applications.MobileNetV2(input_shape = [128, 128, 3], include_top = False)
 
+
+resnet_names = [
+    "conv2_block1_1_relu",
+    "conv3_block1_1_relu",
+    "conv4_block1_1_relu",
+    "conv5_block1_1_relu",
+    "conv5_block3_out",
+]
+
 layer_names = [
     'block_1_expand_relu',
     'block_3_expand_relu',
@@ -108,11 +117,11 @@ model.compile(
 
 show_predictions(val_ds, model, 1)
 
-model_name = "20_epochs"
+model_name = "30_epochs"
 
 tensorboard_callback = get_tensorboard_callback(model_name)
 
-EPOCHS = 20
+EPOCHS = 30
 model.fit(
     train_ds,
     epochs = EPOCHS,

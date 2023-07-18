@@ -179,7 +179,7 @@ def save_model(model, model_name, root_model_dir = "segmentation_model/models"):
     # Save the model
     model.save(os.path.join(root_model_dir, model_name, "model.keras"))
 
-def load_model(model_name, root_model_dir = "/segmentation_model/models", path_to_model = None):
+def load_model(model_name, root_model_dir = "segmentation_model/models", path_to_model = None):
     '''
     Loads a model from the given directory.
 
