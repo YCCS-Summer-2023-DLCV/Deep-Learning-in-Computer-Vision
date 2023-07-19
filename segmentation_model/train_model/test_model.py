@@ -18,7 +18,7 @@ import tensorflow as tf
 from segmentation_model.load_dataset.load_dataset import load_dataset
 from segmentation_model.train_model.utils import show_predictions, normalize_example, load_model
 
-model = load_model("30_epochs")
+model = load_model("20_epochs")
 
 path_to_ds = "/home/ec2-user/Documents/datasets/segmentation-dataset"
 test_ds = load_dataset(path_to_ds, "validation")

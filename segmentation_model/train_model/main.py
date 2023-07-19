@@ -48,7 +48,7 @@ class AugmentLayer(tf.keras.layers.Layer):
 
         return inputs, mask
     
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 train_ds = train_ds.batch(BATCH_SIZE).map(AugmentLayer()).prefetch(buffer_size = tf.data.AUTOTUNE)
 val_ds = val_ds.batch(BATCH_SIZE).map(AugmentLayer()).prefetch(buffer_size = tf.data.AUTOTUNE)
 
@@ -120,7 +120,7 @@ model.compile(
 
 show_predictions(val_ds, model)
 
-model_name = "increase-learning-rate"
+model_name = "batch_size_64"
 
 tensorboard_callback = get_tensorboard_callback(model_name)
 
