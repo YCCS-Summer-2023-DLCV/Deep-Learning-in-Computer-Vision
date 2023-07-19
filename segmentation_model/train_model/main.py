@@ -109,15 +109,18 @@ def get_unet_model(output_channels: int):
     return tf.keras.Model(inputs = inputs, outputs = x)
 
 model = get_unet_model(output_channels = 10)
+
+LEARNING_RATE = 0.01 # default is 0.001
+
 model.compile(
-    optimizer = "adam",
+    optimizer = tf.keras.optimizers.Adam(learning_rate = LEARNING_RATE),
     loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits = True),
     metrics = ["accuracy"]
 )
 
 show_predictions(val_ds, model)
 
-model_name = "10_output_channels"
+model_name = "increase-learning-rate"
 
 tensorboard_callback = get_tensorboard_callback(model_name)
 
