@@ -82,4 +82,4 @@ image_names = ["apple","sandwich","carrot","broccoli", "pizza"]
 
 for name in image_names:
     for i in range(1,5):
-        predict_image_with_nms("/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/coco_test/"+name+"_"+ str(i)+".jpg", "/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/coco_inference/"+name+"_"+ str(i)+"_final.jpg","/home/ec2-user/Deep-Learning-in-Computer-Vision/model/saved_model/efficientnet_b1",100,0.3,11.0)
+        predict_image_with_nms("/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/coco_test/"+name+"_"+ str(i)+".jpg", "/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/coco_inference_10.5/"+name+"_"+ str(i)+"_final.jpg","/home/ec2-user/Deep-Learning-in-Computer-Vision/model/saved_model/SelectiveSWeighted.keras",100,0.3,10.5)
