@@ -16,6 +16,10 @@ Functions:
         Save a model
     `load_model(model_name)`
         Load a model
+    `get_tensorboard_callback(model_name)`
+        Get a TensorBoard callback for a model
+    `plot_history(history, model_name, aspects, height, length, to_file, root_dir)`
+        Plot the history of a model
 
 Author: Tuvya Macklin
 
@@ -143,6 +147,7 @@ def show_predictions(dataset, model, num = None, root_dir = "segmentation_model/
     for index, (image, mask) in enumerate(dataset.take(num)):
         pred_mask = model.predict(image)
 
+        file_name = default_file_name
         if multiple:
             file_name = default_file_name + "-" + str(index)
 
@@ -234,3 +239,59 @@ def get_tensorboard_callback(model_name: str, root_dir = "segmentation_model/mod
     log_dir = os.path.join(root_dir, "fit", model_name, datetime.datetime.now().strftime("%Y.%m.%d-%H:%M:%S"))
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
     return tensorboard_callback
+
+def plot_history(history, model_name = None, aspects = ["accuracy"], height = 7, length = 7, to_file = True, root_dir = "segmentation_model/train_model/plots/history"):
+    '''
+    Plots the history of a model.
+
+    Parameters:
+        history (tf.keras.callbacks.History): The history of the model.
+        model_name (str): The name of the model.
+        aspects (list): The aspects of the model to plot. The default is ["accuracy"].
+        height (int): The height of the plot. The default is 7.
+        length (int): The length of the plot. The default is 7.
+        to_file (bool): Whether to save the plot to a file or not. The default is True.
+        root_dir (str): The root directory to save the plot to. The default is "segmentation_model/train_model/plots/history".
+
+    Returns:
+        None
+
+    Side Effects:
+        Saves the plot to a file.
+
+    Notes:
+        The plot is saved to root_dir/history-model_name.png if to_file is True.
+        If no model name is given, the plot is saved to root_dir/history-HH:MM.png, where HH:MM is the current time.
+    '''
+    
+    plt.figure(figsize = (height, length))
+
+    for count, aspect in enumerate(aspects):
+        plt.subplot(1, len(aspects), count + 1)
+        plt.plot(history.history[aspect], label = "Training " + aspect)
+        plt.plot(history.history["val_" + aspect], label = "Validation " + aspect)
+
+        plt.xlabel("Epoch")
+        plt.ylabel(aspect)
+
+        plt.title("Training and Validation " + aspect)
+
+        if aspect == "loss":
+            plt.legend(loc = "upper right")
+        else:
+            plt.legend(loc = "lower right")
+    
+    if to_file:
+        file_name = "history"
+        if not model_name is None:
+            file_name += "-" + model_name
+        else:
+            # If there is no model name, add the time in the format HH:MM
+            file_name += "-" + datetime.datetime.now().strftime("%H:%M")
+        file_name += ".png"
+
+        ensure_directory_exists(root_dir)
+
+        plt.savefig(os.path.join(root_dir, file_name))
+    else:
+        plt.show()

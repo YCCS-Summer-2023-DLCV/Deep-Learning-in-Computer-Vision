@@ -19,7 +19,7 @@ from tensorflow_examples.models.pix2pix import pix2pix
 import matplotlib.pyplot as plt
 
 from segmentation_model.load_dataset.load_dataset import load_dataset
-from segmentation_model.train_model.utils import display, normalize_example, show_predictions, save_model, get_tensorboard_callback
+from segmentation_model.train_model.utils import display, normalize_example, show_predictions, save_model, get_tensorboard_callback, plot_history
 
 path_to_ds = "/home/ec2-user/Documents/datasets/segmentation-dataset"
 
@@ -108,21 +108,21 @@ def get_unet_model(output_channels: int):
 
     return tf.keras.Model(inputs = inputs, outputs = x)
 
-model = get_unet_model(output_channels = 1)
+model = get_unet_model(output_channels = 10)
 model.compile(
     optimizer = "adam",
     loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits = True),
     metrics = ["accuracy"]
 )
 
-show_predictions(val_ds, model, 1)
+show_predictions(val_ds, model)
 
-model_name = "30_epochs"
+model_name = "10_output_channels"
 
 tensorboard_callback = get_tensorboard_callback(model_name)
 
-EPOCHS = 30
-model.fit(
+EPOCHS = 20
+history = model.fit(
     train_ds,
     epochs = EPOCHS,
     validation_data = val_ds,
@@ -132,3 +132,5 @@ model.fit(
 show_predictions(val_ds, model, 1)
 
 save_model(model, model_name)
+
+plot_history(history, model_name)
