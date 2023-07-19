@@ -75,7 +75,7 @@ layer_names = [
 base_model_outputs = [base_model.get_layer(name).output for name in layer_names]
 
 down_stack = tf.keras.Model(inputs = base_model.input, outputs = base_model_outputs)
-down_stack.trainable = False
+# down_stack.trainable = False
 
 # Build the upstack which goes from 4x4 -> 8x8 -> ... -> 64x64
 up_stack = [
@@ -108,7 +108,7 @@ def get_unet_model(output_channels: int):
 
     return tf.keras.Model(inputs = inputs, outputs = x)
 
-model = get_unet_model(output_channels = 3)
+model = get_unet_model(output_channels = 1)
 model.compile(
     optimizer = "adam",
     loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits = True),
