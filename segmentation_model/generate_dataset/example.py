@@ -1,5 +1,5 @@
 from PIL import Image
-from conversions import convert_box_type
+from segmentation_model.generate_dataset.conversions import convert_box_type
 import numpy as np
 
 class Example():
