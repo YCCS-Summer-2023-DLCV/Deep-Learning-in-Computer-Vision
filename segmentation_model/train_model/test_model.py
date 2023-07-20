@@ -18,9 +18,9 @@ import tensorflow as tf
 from segmentation_model.load_dataset.load_dataset import load_dataset
 from segmentation_model.train_model.utils import show_predictions, normalize_example, load_model
 
-model = load_model("increase-learning-rate")
+model = load_model("broccoli_model")
 
-path_to_ds = "/home/ec2-user/Documents/datasets/segmentation-dataset"
+path_to_ds = "/home/ec2-user/Documents/datasets/broccoli-segmentation-dataset"
 test_ds = load_dataset(path_to_ds, "validation")
 
 test_ds = test_ds.map(normalize_example, num_parallel_calls = tf.data.AUTOTUNE)

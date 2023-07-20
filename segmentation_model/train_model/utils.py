@@ -285,12 +285,12 @@ def plot_history(history, model_name = None, aspects = ["accuracy"], height = 7,
             plt.legend(loc = "lower right")
     
     if to_file:
-        file_name = "history"
+        file_name = ""
         if not model_name is None:
-            file_name += "-" + model_name
+            file_name += model_name
         else:
             # If there is no model name, add the time in the format HH:MM
-            file_name += "-" + datetime.datetime.now().strftime("%H:%M")
+            file_name += datetime.datetime.now().strftime("%H:%M")
         file_name += ".png"
 
         ensure_directory_exists(root_dir)
@@ -298,3 +298,84 @@ def plot_history(history, model_name = None, aspects = ["accuracy"], height = 7,
         plt.savefig(os.path.join(root_dir, file_name))
     else:
         plt.show()
+
+def get_unet_model(output_channels: int, down_stack, up_stack):
+    '''
+    Returns a U-Net model.
+
+    Parameters:
+        output_channels (int): The number of output channels.
+        down_stack (list): The down stack of the U-Net.
+        up_stack (list): The up stack of the U-Net.
+
+    Returns:
+        A U-Net model.
+
+    Notes:
+        The down stack should be a model with the following outputs:
+        ```
+        [
+            (batch_size, 64, 64, 64),
+            (batch_size, 32, 32, 128),
+            (batch_size, 16, 16, 256),
+            (batch_size, 8, 8, 512),
+            (batch_size, 4, 4, 512)
+        ]
+        ```
+        The up stack should be a model with the following outputs:
+        ```
+        [
+            (batch_size, 8, 8, 1024),
+            (batch_size, 16, 16, 512),
+            (batch_size, 32, 32, 256),
+            (batch_size, 64, 64, 128)
+        ]
+        ```
+    '''
+    inputs = tf.keras.layers.Input(shape = [128, 128, 3])
+
+    skips = down_stack(inputs)
+    x = skips[-1]
+    skips = reversed(skips[:-1])
+
+    for up, skip in zip(up_stack, skips):
+        x = up(x)
+        concat = tf.keras.layers.Concatenate()
+        x = concat([x, skip])
+
+    last = tf.keras.layers.Conv2DTranspose(
+        filters = output_channels,
+        kernel_size = 3,
+        strides = 2,
+        padding = "same"
+    )
+
+    x = last(x)
+
+    return tf.keras.Model(inputs = inputs, outputs = x)
+
+class AugmentLayer(tf.keras.layers.Layer):
+    '''
+    Implements a layer that augments the inputs and masks.
+
+    Methods:
+        `__init__(self, seed = 42)` -> `None`
+        `call(inputs, mask)` -> `(inputs, mask)`
+            Augments the inputs and masks.
+
+    Notes:
+        The augmentation is a random horizontal flip.
+
+    '''
+    def __init__(self, seed = 42):
+        super().__init__()
+
+        # Both layers should have the same seed so they augment in tandem
+        self.augment_inputs = tf.keras.layers.RandomFlip(mode = "horizontal", seed = seed)
+        self.augment_mask = tf.keras.layers.RandomFlip(mode = "horizontal", seed = seed)
+
+    def call(self, inputs, mask):
+        inputs = self.augment_inputs(inputs)
+        mask = self.augment_mask(mask)
+
+        return inputs, mask

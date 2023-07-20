@@ -6,3 +6,4 @@ validation/
 logs/
 .vscode/
 .tensorboard
+.tuvya_stuff

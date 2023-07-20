@@ -34,6 +34,34 @@ def load_dataset(path_to_ds, split, IMG_SIZE = [128, 128], shuffle = False):
         loaded as a bunch of file paths and then decoded into images. The
         images are then resized to the IMG_SIZE which is [128, 128] by default.
         The dataset is then zipped together with the masks and returned.
+
+        The structure of the dataset should be as follows:
+        ```
+            dataset
+            ├── train
+            │   ├── image_1
+            │   ├── image_2
+            │   ├── ...
+            │   └── image_n
+            └── train-anno
+            │   ├── mask_1
+            │   ├── mask_2
+            │   ├── ...
+            │   └── mask_n
+            ├── val
+            │   ├── image_1
+            │   ├── image_2
+            │   ├── ...
+            │   └── image_n
+            └── val-anno
+                ├── mask_1
+                ├── mask_2
+                ├── ...
+                └── mask_n
+        ```
+
+
+
     '''
 
     # Define the functions to process the paths
