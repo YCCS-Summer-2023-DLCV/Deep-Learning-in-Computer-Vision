@@ -13,12 +13,12 @@ def _set_path():
 
 _set_path()
 
-from selective_search import selective_search_fast
+from inference.selective_search import selective_search_fast
 import PIL
 import numpy as np
 
-from segmentation_data.generate_dataset.example import Example
-from segmentation_data.generate_dataset.conversions import convert_box_type
+from segmentation_model.generate_dataset.example import Example
+from segmentation_model.generate_dataset.conversions import convert_box_type
 
 
 def process_example(input_example, classes, use_selective_search: bool = True):
