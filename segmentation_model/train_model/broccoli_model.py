@@ -61,13 +61,7 @@ up_stack = [
 
 model = utils.get_unet_model(2, down_stack, up_stack)
 
-LEARNING_RATE = 0.001 # default is 0.001
-
-def iou_score(y_true, y_pred, smooth=1):
-    intersection = tf.reduce_sum(y_true * y_pred, axis=[1, 2, 3])
-    union = tf.reduce_sum(y_true, axis=[1, 2, 3]) + tf.reduce_sum(y_pred, axis=[1, 2, 3]) - intersection
-    iou = (intersection + smooth) / (union + smooth)
-    return tf.reduce_mean(iou)
+LEARNING_RATE = 0.01 # default is 0.001
 
 model.compile(
     optimizer = tf.keras.optimizers.Adam(learning_rate = LEARNING_RATE),
@@ -76,13 +70,11 @@ model.compile(
     metrics = [tf.keras.metrics.IoU(num_classes = 2, target_class_ids=[1], sparse_y_pred = False)]
 )
 
-utils.show_predictions(val_ds, model)
-
-model_name = "broccoli_model_iou-20-epochs"
+model_name = "broccoli_model_higher_lr"
 
 tensorboard_callback = utils.get_tensorboard_callback(model_name)
 
-EPOCHS = 20
+EPOCHS = 30
 history = model.fit(
     train_ds,
     epochs = EPOCHS,
