@@ -10,3 +10,6 @@ In the Selective Search Dataset:
 Examples in Train: 264652
 Examples in Validation: 11941
 Total: 276,593
+
+For the dataset without overlapping bounding boxes:
+Examples with only one food class: train - 12925, validation - 550
