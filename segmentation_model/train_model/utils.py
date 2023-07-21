@@ -374,6 +374,9 @@ class AugmentLayer(tf.keras.layers.Layer):
         self.augment_inputs = tf.keras.layers.RandomFlip(mode = "horizontal", seed = seed)
         self.augment_mask = tf.keras.layers.RandomFlip(mode = "horizontal", seed = seed)
 
+        self.augment_inputs = tf.keras.layers.RandomFlip(mode = "vertical", seed = seed)
+        self.augment_mask = tf.keras.layers.RandomFlip(mode = "vertical", seed = seed)
+
     def call(self, inputs, mask):
         inputs = self.augment_inputs(inputs)
         mask = self.augment_mask(mask)

@@ -70,11 +70,11 @@ model.compile(
     metrics = [tf.keras.metrics.IoU(num_classes = 2, target_class_ids=[1], sparse_y_pred = False)]
 )
 
-model_name = "broccoli_model_higher_lr"
+model_name = "broccoli_50_more_augmentations"
 
 tensorboard_callback = utils.get_tensorboard_callback(model_name)
 
-EPOCHS = 30
+EPOCHS = 50
 history = model.fit(
     train_ds,
     epochs = EPOCHS,
