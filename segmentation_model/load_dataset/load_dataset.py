@@ -100,6 +100,36 @@ def load_dataset(path_to_ds, split, IMG_SIZE = [128, 128], shuffle = False):
 
     return dataset
 
+def load_multiple_datasets(paths_and_labels: dict[str], split: str, IMG_SIZE = [128, 128], shuffle: bool = False):
+    '''
+    Loads multiple datasets and combines them into one.
+
+    Parameters:
+        paths_and_labels (dict[str]): Dictionary containing the paths to the datasets and the labels for each dataset.
+        split (str): Split to load. Can be either "train" or "val".
+        IMG_SIZE (list): Size to resize the images to. Defaults to [128, 128].
+        shuffle (bool): Whether or not to shuffle the dataset. Defaults to False.
+
+    Returns:
+        dataset (tf.data.Dataset): Dataset containing the images and masks.
+
+    Note:
+        The structure of the dictionary should be as follows:
+        ```python
+            paths_and_labels = {
+                "path_to_ds_1": "label_1",
+                "path_to_ds_2": "label_2",
+                ...
+                "path_to_ds_n": "label_n"
+            }
+        ```
+    '''
+    # Load each dataset
+
+    # Scale the masks of each dataset. One should not be scaled. The second scaled by 2. The third by 3...
+
+    # Combine the datasets
+    pass
 
 
 if __name__ == "__main__":
