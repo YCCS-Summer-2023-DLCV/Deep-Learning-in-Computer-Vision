@@ -4,9 +4,9 @@ import tensorflow as tf
 import selective_search
 from PIL import Image
 import cv2
-
+import tensorflow_addons as tfa
 labels = ["apple","background", "banana",  "broccoli" ,  "cake", "carrot", "donut", "hot dog", "orange", "pizza", "sandwich"]
-
+labels_segmentation = {"broccoli"}
 def _predict_image(image_path, model_path):
  
     # Recreate the exact same model, including its weights and the optimizer
@@ -49,25 +49,42 @@ def _non_max_suppression(boxes, scores, max_bboxes, iou_threshold, score_thresho
             nms_boxes[i] = tf.gather(box, selected_indices).numpy()
     return nms_boxes
 
-def _draw_bbox(boxes, image_path, final_path):
+def _draw_bbox(boxes, image_path, final_path, segmentation_model_path):
     image = cv2.imread(image_path)
     for i in range (0,11):
         if i in boxes:
             for (startY, startX, endY, endX) in boxes[i]:
-                cv2.rectangle(image, (startX, startY), (endX, endY), (0, 0, 255), 1)
-                (w, h), _ = cv2.getTextSize(
-                    labels[i], cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
+                if labels[i] in labels_segmentation:
 
-                image = cv2.rectangle(image, (startX, startY - 20), (startX + w, startY), (0, 0, 255), -1)
-                image = cv2.putText(image, labels[i], (startX, startY - 5),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 1)
-        
+                    cv2.rectangle(image, (startX, startY), (endX, endY), (0, 0, 255), 1)
+                    (w, h), _ = cv2.getTextSize(
+                        labels[i], cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
+
+                    image = cv2.rectangle(image, (startX, startY - 20), (startX + w, startY), (0, 0, 255), -1)
+                    image = cv2.putText(image, labels[i], (startX, startY - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 1)
+                else: 
+                    _segmentaion(image_path,image,segmentation_model_path,startY,startX,endY,endX)
+               
     cv2.imwrite(final_path, image)
 
-def predict_image_with_nms(image_path,final_path,  model_path, max_bboxes, iou_threshold, score_threshold):
+def _segmentaion(image_path,output,model_path,startY,startX,endY,endX):
+    image = cv2.imread(image_path)
+    cropped_image = image[startX:endX, startY:endY]
+    cv2.imwrite("Cropped Image.jpg", cropped_image)
+    model = tf.keras.models.load_model(model_path)
+    cropped_image = tf.image.resize(cropped_image,(120,120))
+    cropped_image = tf.reshape(cropped_image, [1, 120, 120, 3])
+    prediction = model.predict(cropped_image)
+    color = np.array([0,255,0], dtype='uint8')
+    masked_img = np.where(prediction[...,None], color, output)
+    output = cv2.addWeighted(output, 0.8, masked_img, 0.2,0)
+
+
+def predict_image_with_nms(image_path,final_path,  model_path, max_bboxes, iou_threshold, score_threshold, segmentation_model_path):
     sorted_bbox,scores = _predict_image(image_path,model_path)
     box = _non_max_suppression(sorted_bbox,scores,max_bboxes, iou_threshold,score_threshold)
-    _draw_bbox(box,image_path,final_path)
+    _draw_bbox(box,image_path,final_path, segmentation_model_path)
 
 def predict_image_without_nms(image_path,final_path,  model_path):
     sorted_bbox,scores  = _predict_image(image_path,model_path)
@@ -78,8 +95,8 @@ def predict_image_without_nms(image_path,final_path,  model_path):
             boxes[i] = np.asarray(sorted_bbox[i], dtype=np.int32).reshape(length,4)
     _draw_bbox(sorted_bbox,image_path,final_path)
 
-image_names = ["apple","sandwich","carrot","broccoli", "pizza"]
+image_names = ["broccoli","apple","sandwich","carrot", "pizza"]
 
 for name in image_names:
     for i in range(1,5):
-        predict_image_with_nms("/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/coco_test/"+name+"_"+ str(i)+".jpg", "/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/coco_inference_10.5/"+name+"_"+ str(i)+"_final.jpg","/home/ec2-user/Deep-Learning-in-Computer-Vision/model/saved_model/SelectiveSWeighted.keras",100,0.3,10.5)
+        predict_image_with_nms("/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/coco_test/"+name+"_"+ str(i)+".jpg", "/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/coco_focal_inference_no_overlap_10.5/"+name+"_"+ str(i)+"_final.jpg","/home/ec2-user/Deep-Learning-in-Computer-Vision/model/saved_model/efficientnet_b1_focal_loss_no_overlap",100,0.3,3.5, "/home/ec2-user/Deep-Learning-in-Computer-Vision/model/saved_model/efficientnet_b1_focal_loss_no_overlap")
