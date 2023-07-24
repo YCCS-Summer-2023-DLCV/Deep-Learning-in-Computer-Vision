@@ -26,7 +26,30 @@ from inference.selective_search import selective_search_fast
 
 SS_EXAMPLES_PER_ITEM = 5
 
-def generate_selective_search_examples(dataset, label_subset, all_labels, dataset_title, split):
+def generate_selective_search_examples(dataset, label_subset, all_labels, dataset_title, split, avoid_overlap_mode: str = None):
+    '''
+    Generate examples using selective search
+
+    Parameters:
+        dataset: the dataset to generate examples from
+        label_subset: the subset of labels to generate examples for
+        all_labels: the list of all labels in the dataset
+        dataset_title: the title of the dataset
+        split: the split to generate examples for
+        avoid_overlap_mode: the mode to use for avoiding overlap
+
+    Returns:
+        None
+
+    Side effects:
+        Saves the cropped images to ROOT_DIR/dataset_title/split
+
+    Notes:
+        Valid values for avoid_overlap_mode are:
+        - None: don't avoid overlap
+        - "single_class_examples": only save examples that have a single class in the subset
+    '''
+
     # Get the label registry
     label_ids = _get_label_ids(label_subset, all_labels)
     label_registry = {id: name for id, name in zip(label_ids, label_subset)}
@@ -36,7 +59,7 @@ def generate_selective_search_examples(dataset, label_subset, all_labels, datase
 
     # For each example, crop out patches using selective search boxes that encompass the coco box
     for example in tqdm(dataset):
-        _process_example(example, label_registry, split_dir)
+        _process_example(example, label_registry, split_dir, avoid_overlap_mode = avoid_overlap_mode)
 
 def _create_directories(ds_dir, split_name, label_subset):
     def ensure_directory_exists(path):
@@ -50,13 +73,42 @@ def _create_directories(ds_dir, split_name, label_subset):
     
     return split_dir
 
-def _process_example(example, label_registry, split_dir):
+def _process_example(example, label_registry, split_dir, avoid_overlap_mode: str = None):
+    '''
+    For each example, crop out patches using selective search boxes that encompass the coco box
+
+    Parameters:
+        example: the example to process
+        label_registry: a dictionary mapping label ids to label names
+        split_dir: the directory to save the cropped images to
+        avoid_overlap_mode: the mode to use for avoiding overlap
+
+    Returns:
+        None
+
+    Side effects:
+        Saves the cropped images to split_dir
+
+    Notes:
+        Valid values for avoid_overlap_mode are:
+        - None: don't avoid overlap
+        - "single_class_examples": only save examples that have a single class in the subset
+
+    '''
+
     # Get a list of items in the example that are in the subset and their corresponding boxes
     # Store them in a list of tuples: (item_label_id, item_bbox)
     items = _get_items_and_boxes_in_example(example, label_registry)
 
     if len(items) == 0:
         return
+    
+    if avoid_overlap_mode == "single_class_examples":
+        # Check how many classes are in the example
+        # If there is more than one class, return
+        classes_in_example = set([item[0] for item in items])
+        if len(classes_in_example) > 1:
+            return
 
     # Get selective search boxes
     ss_boxes = _get_ss_boxes_for_example(example)
