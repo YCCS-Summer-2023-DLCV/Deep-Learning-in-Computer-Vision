@@ -50,6 +50,7 @@ layer_names = [
 base_model_outputs = [base_model.get_layer(name).output for name in layer_names]
 
 down_stack = tf.keras.Model(inputs = base_model.input, outputs = base_model_outputs)
+down_stack.trainable = True
 
 # Build the upstack which goes from 4x4 -> 8x8 -> ... -> 64x64
 up_stack = [
@@ -61,7 +62,7 @@ up_stack = [
 
 model = utils.get_unet_model(2, down_stack, up_stack)
 
-LEARNING_RATE = 0.01 # default is 0.001
+LEARNING_RATE = 0.002 # default is 0.001
 
 model.compile(
     optimizer = tf.keras.optimizers.Adam(learning_rate = LEARNING_RATE),
@@ -70,11 +71,11 @@ model.compile(
     metrics = [tf.keras.metrics.IoU(num_classes = 2, target_class_ids=[1], sparse_y_pred = False)]
 )
 
-model_name = "broccoli_50_more_augmentations"
+model_name = "broccoli_150_.002_lr"
 
 tensorboard_callback = utils.get_tensorboard_callback(model_name)
 
-EPOCHS = 50
+EPOCHS = 150
 history = model.fit(
     train_ds,
     epochs = EPOCHS,

@@ -21,7 +21,7 @@ from segmentation_model.generate_dataset.example import Example
 from segmentation_model.generate_dataset.conversions import convert_box_type
 
 
-def process_example(input_example, classes, use_selective_search: bool = True):
+def process_example(input_example, classes, use_selective_search: bool = True, min_size = (30, 30)):
     '''
     Process a single example.
 
