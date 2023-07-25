@@ -35,7 +35,7 @@ import os
 import datetime
 
 # Display an example with its mask
-def display(display_list, to_file = True, root_dir = ".tuvya_stuff/plots/display", file_name = "img_and_mask", count = None):
+def display(display_list, to_file = True, root_dir = ".tuvya_stuff/plots/display", file_name = "img_and_mask", count = None, color_bar = False):
     '''
     Display a list of images and their masks
 
@@ -55,15 +55,18 @@ def display(display_list, to_file = True, root_dir = ".tuvya_stuff/plots/display
 
     ensure_directory_exists(root_dir)
 
-    plt.figure(figsize=(15, 15))
+    plt.figure(figsize=(10, 10 * len(display_list)))
 
     title = ["Input Image", "True Mask", "Predicted Mask"]
 
     for i in range(len(display_list)):
         plt.subplot(1, len(display_list), i + 1)
         plt.title(title[i])
-        plt.imshow(tf.keras.utils.array_to_img(display_list[i]))
+        plt.imshow(display_list[i].numpy())
         plt.axis("off")
+
+        if i > 0 and color_bar:
+            plt.colorbar()
     
     if to_file:
         path = os.path.join(root_dir, file_name)
@@ -108,7 +111,6 @@ def normalize_example(image, mask):
     '''
 
     image = tf.cast(image, tf.float32) / 255.0
-    mask = tf.cast(mask, tf.float32) / 255.0
 
     return image, mask
 
@@ -124,7 +126,7 @@ def create_mask(prediction):
 
     return prediction[0]
 
-def show_predictions(dataset, model, num = None, root_dir = ".tuvya_stuff/plots/predictions", default_file_name = "prediction"):
+def show_predictions(dataset, model, num = None, root_dir = ".tuvya_stuff/plots/predictions", default_file_name = "prediction", color_bar = False):
     '''
     Display a list of images and their masks
 
@@ -158,7 +160,8 @@ def show_predictions(dataset, model, num = None, root_dir = ".tuvya_stuff/plots/
         display(
             [image[0], mask[0], create_mask(pred_mask)],
             root_dir = root_dir,
-            file_name = file_name
+            file_name = file_name,
+            color_bar = color_bar
         )
 
 def save_model(model, model_name, root_model_dir = ".tuvya_stuff/models"):

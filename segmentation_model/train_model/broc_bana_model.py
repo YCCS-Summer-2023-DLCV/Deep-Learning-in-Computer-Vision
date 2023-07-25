@@ -16,13 +16,16 @@ _set_path()
 import tensorflow as tf
 from tensorflow_examples.models.pix2pix import pix2pix
 
-from segmentation_model.load_dataset.load_dataset import load_dataset
+from segmentation_model.load_dataset.load_dataset import load_multiple_datasets
 import segmentation_model.train_model.utils as utils
 
-path_to_ds = "/home/ec2-user/Documents/datasets/broccoli-segmentation-dataset"
+paths = [
+    "/home/ec2-user/Documents/datasets/broccoli-segmentation-dataset",
+    "/home/ec2-user/Documents/datasets/banana-segmentation-dataset"
+]
 
-train_ds = load_dataset(path_to_ds, "train", shuffle = True)
-val_ds = load_dataset(path_to_ds, "validation")
+train_ds = load_multiple_datasets(paths, "train", shuffle = True)
+val_ds = load_multiple_datasets(paths, "validation")
 
 for image, label in train_ds.take(1):
     utils.display((image, label))
@@ -60,22 +63,22 @@ up_stack = [
     pix2pix.upsample(64, 3),
 ]
 
-model = utils.get_unet_model(2, down_stack, up_stack)
+model = utils.get_unet_model(3, down_stack, up_stack)
 
-LEARNING_RATE = 0.002 # default is 0.001
+LEARNING_RATE = 0.001 # default is 0.001
 
 model.compile(
     optimizer = tf.keras.optimizers.Adam(learning_rate = LEARNING_RATE),
     loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits = True),
     # Use IOU metric
-    metrics = [tf.keras.metrics.IoU(num_classes = 2, target_class_ids=[1], sparse_y_pred = False)]
+    metrics = [tf.keras.metrics.IoU(num_classes = 3, target_class_ids=[1, 2], sparse_y_pred = False)]
 )
 
-model_name = "broccoli_150_better_load"
+model_name = "both_100"
 
 tensorboard_callback = utils.get_tensorboard_callback(model_name)
 
-EPOCHS = 150
+EPOCHS = 100
 history = model.fit(
     train_ds,
     epochs = EPOCHS,

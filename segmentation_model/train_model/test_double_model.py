@@ -15,18 +15,22 @@ _set_path()
 
 import tensorflow as tf
 
-from segmentation_model.load_dataset.load_dataset import load_dataset
+from segmentation_model.load_dataset.load_dataset import load_multiple_datasets
 from segmentation_model.train_model.utils import show_predictions, normalize_example, load_model
 
 model = load_model("broccoli_20_better_load")
 
-path_to_ds = "/home/ec2-user/Documents/datasets/broccoli-segmentation-dataset"
-test_ds = load_dataset(path_to_ds, "validation")
+paths = [
+    "/home/ec2-user/Documents/datasets/broccoli-segmentation-dataset",
+    "/home/ec2-user/Documents/datasets/banana-segmentation-dataset"
+]
+
+test_ds = load_multiple_datasets(paths, "validation", shuffle = True)
 
 test_ds = test_ds.map(normalize_example, num_parallel_calls = tf.data.AUTOTUNE)
 
 test_ds = test_ds.batch(32)
 
-model.evaluate(test_ds)
+#model.evaluate(test_ds)
 
 show_predictions(test_ds, model, 10)
