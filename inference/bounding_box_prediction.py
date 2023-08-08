@@ -136,14 +136,3 @@ def predict_image_without_nms(image_path,final_path,  model_path):
             length = len(scores[i])
             boxes[i] = np.asarray(sorted_bbox[i], dtype=np.int32).reshape(length,4)
     _draw_bbox(boxes,image_path,final_path)
-
-
-#predict_image_with_nms("/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/coco_test/carrots_and_broccoli_1.jpg", "/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/carrot_broccoli_30_4-07/carrots_and_broccoli_1" +"_final.jpg","/home/ec2-user/Deep-Learning-in-Computer-Vision/model/saved_model/efficientnet_b1_focal_loss_no_overlap",100,0.30,4.07, "/home/ec2-user/Deep-Learning-in-Computer-Vision/segmentation_model/train_model/model.keras")
-
-image_names = ["oranges_and_apples", "bananas", "carrots_and_broccoli"]
-
-
-for name in image_names:
-    for i in range(1,4):
-        predict_image_without_nms("/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/coco_test/"+name+"_"+ str(i)+".jpg", "/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/final/without_nms_"+name+"_"+ str(i)+"_final.jpg","/home/ec2-user/Deep-Learning-in-Computer-Vision/model/saved_model/efficientnet_b1_focal_loss_no_overlap")
-        predict_image_with_nms("/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/coco_test/"+name+"_"+ str(i)+".jpg", "/home/ec2-user/Deep-Learning-in-Computer-Vision/inference/final/"+name+"_"+ str(i)+"_final.jpg","/home/ec2-user/Deep-Learning-in-Computer-Vision/model/saved_model/efficientnet_b1_focal_loss_no_overlap",100,0.25,3.55, "/home/ec2-user/Deep-Learning-in-Computer-Vision/segmentation_model/train_model/model.keras")
