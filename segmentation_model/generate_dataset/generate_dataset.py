@@ -8,7 +8,7 @@ from process_example import process_example
 
 ROOT_DIR = "/home/ec2-user/Documents/datasets"
 
-def generate_dataset(ds_name, split, classes):
+def generate_dataset(ds_name, split, classes, min_size = None):
     dataset = foz.load_zoo_dataset(
         "coco-2017",
         split = split,
@@ -21,7 +21,22 @@ def generate_dataset(ds_name, split, classes):
     for example in tqdm(dataset):
         datapoints = process_example(example, classes, use_selective_search = False)
         for datapoint in datapoints:
-            _save_datapoint(datapoint, directories)
+            if _datapoint_is_big_enough(datapoint, min_size):
+                _save_datapoint(datapoint, directories)
+
+def _datapoint_is_big_enough(datapoint, min_size):
+    # Check if min_size is specified
+    if min_size is None:
+        return True
+    
+    # Check if the image is big enough
+    image = datapoint["image"]
+    width, height = image.size
+
+    if width < min_size[0] or height < min_size[1]:
+        return False
+    
+    return True
 
 def _save_datapoint(datapoint, directories):
     # Convert the image and mask from numpy arrays to images
@@ -62,5 +77,5 @@ def _create_directories(ds_name, split, classes):
 if __name__ == "__main__":
     classes = ["banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake"]
 
-    generate_dataset(ds_name = "segmentation-dataset", split = "train", classes = classes)
+    generate_dataset(ds_name = "segmentation-dataset-test", split = "train", classes = classes)
     generate_dataset(ds_name = "segmentation-dataset", split = "validation", classes = classes)
