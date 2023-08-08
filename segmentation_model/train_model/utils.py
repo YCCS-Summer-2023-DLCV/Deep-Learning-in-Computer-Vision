@@ -35,7 +35,6 @@ import os
 import datetime
 
 # Display an example with its mask
-
 def display(display_list, to_file = True, root_dir = ".tuvya_stuff/plots/display", file_name = "img_and_mask", count = None, color_bar = False):
     '''
     Display a list of images and their masks
@@ -126,7 +125,6 @@ def create_mask(prediction):
     prediction = prediction[..., tf.newaxis]
 
     return prediction[0]
-
 
 def show_predictions(dataset, model, num = None, root_dir = ".tuvya_stuff/plots/predictions", default_file_name = "prediction", color_bar = False):
     '''

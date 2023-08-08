@@ -113,7 +113,6 @@ def load_dataset(path_to_ds, split, IMG_SIZE = [128, 128], shuffle = False) -> t
 
     return dataset
 
-
 def load_multiple_datasets(dataset_paths: list[str], split: str, IMG_SIZE = [128, 128], shuffle: bool = False) -> tf.data.Dataset:
     '''
     Loads multiple datasets and combines them into one.
@@ -127,7 +126,7 @@ def load_multiple_datasets(dataset_paths: list[str], split: str, IMG_SIZE = [128
     Returns:
         dataset (tf.data.Dataset): Dataset containing the images and masks.
 
-     Note:
+    Note:
         The datasets are first loaded individually with the `load_dataset` function.
         Then the masks are scaled by the index of the dataset in the `dataset_paths`
         list. The datasets are then combined and returned.

@@ -18,7 +18,6 @@ import tensorflow as tf
 from segmentation_model.load_dataset.load_dataset import load_dataset
 from segmentation_model.train_model.utils import show_predictions, normalize_example, load_model
 
-
 model = load_model("broccoli_20_better_load")
 
 path_to_ds = "/home/ec2-user/Documents/datasets/broccoli-segmentation-dataset"
