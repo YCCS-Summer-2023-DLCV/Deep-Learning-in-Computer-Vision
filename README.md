@@ -11,8 +11,12 @@ We couldn't have done this project without the generous help of our mentor [Gers
 At the end of the course, we made a presentation with explanations of how and what we did to produce our results. Please feel free to see [our presentation](https://www.youtube.com/watch?v=JzgG1tagBnc) and [other groups](https://sacknovi.github.io/summer-2023/projects/teams.html#AI-1) who made projects too.
 
 ## Instance Segmentation and Image Classification Project
-### Sharing Data
-*Talk about AWS, S3, and building dataset
+### Data
+Our dataset was created based on the [COCO](https://cocodataset.org/#home) dataset. This dataset contains thousands of images with bounding boxes around the objects and labels for each object classifying what it is. We cropped the images using bounding boxes to generate images with only one type of object in them. We chose to only work on 10 classes (foods specifically) and ignored all other types of objects. Each crop was saved in a directory corresponding to it's class.
+
+Our pipeline uses selective search on the images it receives to generate bounding boxes which are then evaluated by the model. Selective search does not provide high quality bounding boxes like COCO has. Therefore, the examples we generated did not train the model well for the crops it was actually used for. To address this issue, we generated a second version of the dataset using selective search to generate the bounding boxes. We took a few of the selctive search boxes that roughly matched the COCO boxes and used those to generate the cropped examples.
+
+Most of our work was done using AWS EC2 instances. Therefore, it was natural for us to use AWS S3 buckets to share the datasets. This is what we did.
 
 ### Image Classification
 *talk about training model and verifying accuracy
@@ -20,4 +24,6 @@ At the end of the course, we made a presentation with explanations of how and wh
 *graphs
 
 ### Image Segmentation
-*explain
+Image segmentation is the process of labeling which object each pixel in an image belongs to; i.e. it highlights/outlines an object in an image. We began to implement this into our model. Due to time constraints we only had time to apply it to broccoli.
+
+Image segmentation works using a U-Net architecture. This means that we first compress the image to an abstract representation (using a similar process to image classification), and then decompress it into the actual mask. As the image is decompressed, the model receives information about the original image. This allows it to make decisions about the mask based on the concrete appearance of the object in the image.
