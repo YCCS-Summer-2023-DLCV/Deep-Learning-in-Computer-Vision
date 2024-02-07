@@ -19,9 +19,9 @@ Our pipeline uses selective search on the images it receives to generate boundin
 Most of our work was done using AWS EC2 instances. Therefore, it was natural for us to use AWS S3 buckets to share the datasets. This is what we did.
 
 ### Image Classification
-*talk about training model and verifying accuracy
-*transfer learning
-*graphs
+Image classification consists of feeding an image to a trained model and then recieving an output representing the class prediction and the confidence of that prediction. Training took place on AWS EC2 instances specifically utilizing Nvidia GPUs for faster training.
+
+We implementing this classification model using a pre-trained EfficentNet B2 model with fine tuning to increase accuracy for our specific class of objects (Transfer Learning). To address the issue of a small dataset and possible overfitting we utilized data augmentation and a dropout layer to increase the size of our dataset while also helping the model to generalize on input that was not as good as the training data. Our dataset was also imbalanced for some of the classes, to address this issue the loss function was changed from categorical cross entropy to focal loss which helps to assign more weight to the underepresented classes.
 
 ### Image Segmentation
 Image segmentation is the process of labeling which object each pixel in an image belongs to; i.e. it highlights/outlines an object in an image. We began to implement this into our model. Due to time constraints we only had time to apply it to broccoli.
