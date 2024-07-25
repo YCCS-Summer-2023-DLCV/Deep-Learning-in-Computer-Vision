@@ -3,7 +3,7 @@
 Advances in deep learning have revolutionized the field of computer vision and are driving innovations in many fast-growing industries, notably driverless cars, autonomous robots, and AR, to name a few. In this project, we will begin with a quick introduction to convolutional neural networks and learn to work with Tensorflow, Google’s framework for developing and training ML models. Together we selected a common problem in computer vision, namely image classification and segmentation.
 
 ### The Team
-Hey! Our team was made up of Yeshiva University students taking this special summer course in Industrial Software Development. Please make sure to check out our LinkedIns: [Tuvya Macklin](https://www.linkedin.com/in/tuvyamacklin/), [Zachary Mankowitz](https://www.linkedin.com/in/zachary-mankowitz-a4a11324a/), [Eitan Traurig](https://www.linkedin.com/in/eitan-traurig-3332b2261/), [Jason Zelmanovich](https://www.linkedin.com/in/jasonzel/).
+Hey! Our team was made up of Yeshiva University students taking this special summer course in Industrial Software Development. Please make sure to check out our LinkedIns: [Tuvya Macklin](https://www.linkedin.com/in/tuvyamacklin/), [Zachary Mankowitz](https://www.linkedin.com/in/zachary-mankowitz-a4a11324a/), [Eitan Traurig](https://www.linkedin.com/in/eitan-traurig-3332b2261/), [Jason Roth](https://www.linkedin.com/in/jasonzel/).
 
 We couldn't have done this project without the generous help of our mentor [Gershom Kutliroff](https://www.linkedin.com/in/gershom-kutliroff-9a89611/). Gershom has been working in AI for over 15 years and was truley an invaluable resorce.
 
